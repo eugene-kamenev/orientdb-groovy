@@ -23,7 +23,7 @@ public class UserWrapper {
     }
 
     String getId() {
-        this.document.getIdentity().toString()
+        return this.document.getIdentity().toString()
     }
 
     String getFirstName() {
@@ -35,7 +35,7 @@ public class UserWrapper {
     }
 
     Date getBirthday() {
-        this.document.field("birth_date") // different "birth_date" field name
+        return (Date) this.document.field("birth_date") // different "birth_date" field name
     }
 
     // etc..
