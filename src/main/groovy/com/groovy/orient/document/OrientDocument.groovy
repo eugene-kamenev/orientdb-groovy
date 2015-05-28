@@ -9,6 +9,7 @@ import java.lang.annotation.Target
 
 /**
  * Annotation should be used to mark entity class
+ * @param value can be used to choose different orientDB class name, if none
  *
  * @author @eugenekamenev
  */

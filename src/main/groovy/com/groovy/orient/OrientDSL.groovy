@@ -5,7 +5,7 @@ import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 
 class OrientDSL {
 
-    /**
+   /**
      * Provides simple static query execution
      *  Note that orient database should be already attached to thread
      *

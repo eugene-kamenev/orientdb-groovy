@@ -14,8 +14,6 @@ class Person implements AsDocument {
 
 	List<String> strings = []
 
-	List<City> cities
-
 	static transients = ['strings']
 
 	static mapping = {
