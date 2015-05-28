@@ -1,9 +1,16 @@
 package com.groovy.orient.document
 
-import com.groovy.orient.util.ASTUtil
+import com.groovy.orient.document.util.ASTUtil
+import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument
 import groovy.transform.CompileStatic
 import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.expr.ClosureExpression
+import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.expr.NamedArgumentListExpression
+import org.codehaus.groovy.ast.expr.TupleExpression
+import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.AbstractASTTransformation
@@ -21,6 +28,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 class OrientDocumentTransformation extends AbstractASTTransformation {
 
     static final ClassNode document = ClassHelper.make(ODocument).plainNodeReference
+    static final ClassNode otype = ClassHelper.make(OType).plainNodeReference
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -31,14 +39,15 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         def fields = annotatedClass.fields.findAll {
             !(it.name in transients) && !(it.static) && (it.modifiers != ACC_TRANSIENT) && (it.name != 'document')
         }
+        def mappingClosure = annotatedClass.getField('mapping')
+        def mapping = createEntityMappingMap(mappingClosure.initialExpression as ClosureExpression)
+        println mapping
         fields.each {
-            createPropertyGetter(annotatedClass, it)
-            createPropertySetter(annotatedClass, it)
+            createPropertyGetter(annotatedClass, it, mapping[it.name])
+            createPropertySetter(annotatedClass, it, mapping[it.name])
             ASTUtil.removeProperty(annotatedClass, it.name)
         }
         createConstructors(annotatedClass, clusterName)
-        def mapping = annotatedClass.getField('mapping')
-        println mapping.initialExpression
         ASTUtil.removeProperty(annotatedClass, 'mapping')
     }
 
@@ -52,16 +61,36 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         classNode.addConstructor(documentConstructor)
     }
 
-    private void createPropertyGetter(ClassNode clazzNode, FieldNode field) {
-        def getterStatement = returnS(castX(field.type, callX(callThisX('getDocument'), 'field', args(constX(field.name)))))
+    private static Map<String, Map> createEntityMappingMap(ClosureExpression expression) {
+        def mapping = [:]
+        def block = expression.code as BlockStatement
+        block.statements.each {
+            parseMappingExpression((it as ExpressionStatement).expression as MethodCallExpression, mapping)
+        }
+        mapping
+    }
+
+    private static void parseMappingExpression(MethodCallExpression methodCallExpression, Map<String, Map> map) {
+        String name = ASTUtil.parseValue(methodCallExpression.method)
+        def args = (methodCallExpression.arguments as TupleExpression).expressions.first() as NamedArgumentListExpression
+        map[name] = [:]
+        for (arg in args.mapEntryExpressions) {
+            map[name][ASTUtil.parseValue(arg.keyExpression)] = ASTUtil.parseValue(arg.valueExpression)
+        }
+    }
+
+    private static void createPropertyGetter(ClassNode clazzNode, FieldNode field, Map map) {
+        def fieldName = map?.field ? map?.field : field.name
+        def getterStatement = returnS(castX(field.type, callX(callThisX('getDocument'), 'field', args(constX(fieldName)))))
         def method = new MethodNode("get${field.name.capitalize()}", ACC_PUBLIC, field.type, [] as Parameter[], [] as ClassNode[], getterStatement)
         clazzNode.addMethod(method)
     }
 
-    private void createPropertySetter(ClassNode clazzNode, FieldNode field) {
+    private static void createPropertySetter(ClassNode clazzNode, FieldNode field, Map map) {
+        def fieldName = map?.field ? map?.field : field.name
         def setterParam = param(field.type, field.name)
         def setterVar = varX(setterParam)
-        def setterStatement = stmt(callX(callThisX('getDocument'), 'field', args(constX(field.name), setterVar)))
+        def setterStatement = stmt(callX(callThisX('getDocument'), 'field', args(constX(fieldName), setterVar)))
         def method = new MethodNode("set${field.name.capitalize()}", ACC_PUBLIC, ClassHelper.VOID_TYPE, params(setterParam), [] as ClassNode[], setterStatement)
         clazzNode.addMethod(method)
     }

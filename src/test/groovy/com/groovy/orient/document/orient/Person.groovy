@@ -10,7 +10,7 @@ class Person implements AsDocument {
 	String id
 	String firstName
 	String lastName
-	Date birthdate
+	Date birthDate
 
 	List<String> strings = []
 
@@ -20,8 +20,6 @@ class Person implements AsDocument {
 
 	static mapping = {
 		id field: "rid"
-		firstName field: "first_name"
-		lastName field: "last_name"
-		cities formula: "select from City where id = ? order by id desc", params: [id]
+		birthDate field: "birthdate"
 	}
 }

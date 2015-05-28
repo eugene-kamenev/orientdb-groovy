@@ -1,10 +1,11 @@
-package com.groovy.orient.util
+package com.groovy.orient.document.util
 
 import groovy.transform.CompileStatic
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.expr.ArrayExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.ast.expr.ListExpression
+import org.codehaus.groovy.ast.expr.VariableExpression
 
 /**
  * Simple, but useful AST Utils
@@ -41,7 +42,7 @@ class ASTUtil {
 	 * @param defaultValue
 	 * @return
 	 */
-	public static <T> T annotationValue(constant, T defaultValue) {
+	public static <T> T annotationValue(constant, T defaultValue = null) {
 		if (!constant) {
 			return (T) defaultValue
 		}
@@ -61,7 +62,7 @@ class ASTUtil {
 	 * @param defaultValue
 	 * @return
 	 */
-	public static <T> T parseValue(expression, T defaultValue) {
+	public static <T> T parseValue(expression, T defaultValue = null) {
 		if (!expression) {
 			return (T) defaultValue
 		}
@@ -70,6 +71,9 @@ class ASTUtil {
 		}
 		if (expression instanceof ListExpression) {
 			return (T) expression?.expressions?.collect { parseValue(it, null) }
+		}
+		if (expression instanceof VariableExpression) {
+			return (T) expression.name
 		}
 		if (expression instanceof ConstantExpression) {
 			return (T) expression?.value
