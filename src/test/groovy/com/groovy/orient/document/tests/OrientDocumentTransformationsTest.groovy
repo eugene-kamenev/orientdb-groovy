@@ -36,26 +36,27 @@ class OrientDocumentTransformationsTest extends Specification {
         person.save()
         db.commit()
         then: 'assert that firstName equals to assigned before'
-        assert person.firstName == 'First Name'
+        assert person.firstName == 'Gomer Simpson'
     }
 
-    /*def 'test query execution method #type'(String query, args, def list) {
-        given:
+    def 'test query execution method with different params'() {
+        given: 'insert new persons'
         db.begin()
-        new Person(lastName: 'Simpson 1').save()
-        new Person(lastName: 'Simpson 2').save()
-        new Person(lastName: 'Simpson 3').save()
+        new Person(lastName: 'Simpson', firstName: 'Gomer').save()
+        new Person(lastName: 'Simpson', firstName: 'Lara').save()
+        new Person(lastName: 'Simpson', firstName: 'Bart').save()
         db.commit()
-        expect:
-        Person.executeQuery(query, args)
-        where:
-        query                                                 | args                      | list
-        'select from Person where lastName=?'                 | 'Simpson 1'               | list.size() == 1
-        'select from Person where lastName=:namedParam'       | [namedParam: 'Simpson 2'] | list.size() == 1
-        'select from Person where lastName=? and firstName=?' | ['Simpson 3', null]       | list.size() == 1
-
-
-    }*/
+        when: 'execute queries'
+        Person gomer = Person.newInstance(Person.executeQuery('select from Person where firstName=?', 'Gomer').first())
+        Person lara =
+                Person.newInstance(Person.executeQuery('select from Person where firstName=:firstName and lastName like :lastName', [firstName: 'Lara', lastName: '%impso%']).first())
+        Person bart =
+                Person.newInstance(Person.executeQuery('select from Person where firstName=? and lastName like ?', 'Bart', '%imps%').first())
+        then: 'check retrieved values'
+            assert gomer.firstName == 'Gomer'
+            assert lara.firstName == 'Lara'
+            assert bart.firstName == 'Bart'
+    }
 
     def 'test that person was saved to db'() {
         given: 'find person by firstName'
