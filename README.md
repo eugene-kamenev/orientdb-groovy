@@ -30,8 +30,8 @@ public class UserWrapper {
         return (String) this.document.field("firstName")
     }
 
-    void setFirstName() {
-        this.document.field("firstName")
+    void setFirstName(String firstName) {
+        this.document.field("firstName", firstName)
     }
 
     Date getBirthday() {
@@ -69,7 +69,7 @@ Quering
 
 ## How it works in details
 ``` @OrientDocument ``` annotation will apply AST Transformation which will transform your class similar to java one showed before.
-#### 1. Take mapping closure and read mapping properties from it
-#### 2. Create empty constructor and ODocument one
-#### 3. Delete properties and create needed getters
-#### 4. As you implement AsDocument trait, your class would have delegate methods to ODocument, so you can simply call user.save() or access document instance directly with user.document
+##### 1. Take mapping closure and read mapping properties from it
+##### 2. Create empty constructor and ODocument one
+##### 3. Delete properties and create needed getters and setters
+##### 4. As you implement AsDocument trait, your class would have delegate methods to ODocument, so you can simply call user.save() or access document instance directly with user.document
