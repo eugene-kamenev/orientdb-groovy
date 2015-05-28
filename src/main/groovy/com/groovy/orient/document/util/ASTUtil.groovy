@@ -47,10 +47,10 @@ class ASTUtil {
 			return (T) defaultValue
 		}
 		if (constant instanceof ArrayExpression) {
-			return (T) constant?.expressions?.collect { (it as ConstantExpression).value }
+			return (T) constant.expressions?.collect { (it as ConstantExpression).value }
 		}
 		if (constant instanceof ConstantExpression) {
-			return (T) constant?.value
+			return (T) constant.value
 		}
 		return defaultValue
 	}
@@ -67,16 +67,16 @@ class ASTUtil {
 			return (T) defaultValue
 		}
 		if (expression instanceof ArrayExpression) {
-			return (T) expression?.expressions?.collect { (it as ConstantExpression).value }
+			return (T) expression.expressions?.collect { (it as ConstantExpression).value }
 		}
 		if (expression instanceof ListExpression) {
-			return (T) expression?.expressions?.collect { parseValue(it, null) }
+			return (T) expression.expressions?.collect { parseValue(it, null) }
 		}
 		if (expression instanceof VariableExpression) {
 			return (T) expression.name
 		}
 		if (expression instanceof ConstantExpression) {
-			return (T) expression?.value
+			return (T) expression.value
 		}
 	}
 }
