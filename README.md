@@ -30,8 +30,8 @@ public class UserWrapper {
         return (String) this.document.field("firstName")
     }
 
-    void setFirstName() {
-        this.document.field("firstName")
+    void setFirstName(String firstName) {
+        this.document.field("firstName", firstName)
     }
 
     Date getBirthday() {
