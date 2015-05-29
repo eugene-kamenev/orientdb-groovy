@@ -101,6 +101,9 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
             if (otype.text.endsWith('LINK')) {
                 resultBlock.addStatement(assignS(resultVar, ctorX(field.type, args(castX(document, callX(varX(documentField), 'field', args(constX(fieldName))))))))
             }
+            if (otype.text.endsWith('EMBEDDED')) {
+                resultBlock.addStatement(assignS(resultVar, ctorX(field.type, args(castX(document, callX(varX(documentField), 'field', args(constX(fieldName))))))))
+            }
         } else {
             resultBlock.addStatement(assignS(varX(resultVar), castX(field.type, callX(varX(documentField), 'field', args(constX(fieldName))))))
         }
@@ -119,6 +122,11 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         if (otype) {
             if (otype.text.endsWith('LINK')) {
                 args.addExpression(propX(varX(setterVar), 'document'))
+                args.addExpression(otype)
+            }
+            if (otype.text.endsWith('EMBEDDED')) {
+                args.addExpression(propX(varX(setterVar), 'document'))
+                args.addExpression(otype)
             }
         } else {
             args.addExpression(setterVar)

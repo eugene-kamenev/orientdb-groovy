@@ -1,6 +1,7 @@
 package com.groovy.orient.document.tests
 import com.groovy.orient.document.orient.City
 import com.groovy.orient.document.orient.Person
+import com.groovy.orient.document.orient.Profile
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
 import spock.lang.Shared
 import spock.lang.Specification
@@ -62,9 +63,26 @@ class OrientDocumentTransformationsTest extends Specification {
             db.begin()
                 person.save()
             db.commit()
+        Person nPerson = Person.executeQuery('select from Person where city.title = ?', 'New York').first()
         then: 'check that entities have generated ids'
             person.id != null
             person.city.id != null
-            Person.executeQuery('select from Person where city.title = ?', 'New York').size() != 0
+            nPerson.city.id != null
+    }
+
+    def 'test OType.EMBEDDED OrientDB relationship'() {
+        given: 'test relationship creation'
+            def phones = ['900000', '800000', '400000']
+            def person = new Person(profile: new Profile(phones: phones, isPublic: true))
+        when: 'persist document to orientdb'
+            db.begin()
+                person.save()
+            db.commit()
+        Person person1 = Person.executeQuery('select from Person where profile <> ?', null).first()
+        then: 'check entities'
+            person1 != null
+            person1.profile != null
+            person1.profile.isPublic
+            person1.profile.phones.size() == 3
     }
 }
