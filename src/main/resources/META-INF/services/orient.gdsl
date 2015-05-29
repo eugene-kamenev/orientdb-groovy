@@ -8,7 +8,7 @@ contributor(context(scope: annotatedScope(ctype: "com.groovy.orient.document.Ori
 
 contributor(context()) {
     if (classType?.hasAnnotation('com.groovy.orient.document.OrientDocument')) {
-        method name: 'executeQuery', type: "List<$classType.name>", params: ['query':String.name, 'params':'Object[]']
+        method(name: 'executeQuery', type: "List<$classType.name>", params: ['query':String.name, 'params':'Object[]'], isStatic: true)
         property name: 'document', type: 'com.orientechnologies.orient.core.record.impl.ODocument'
         // find OrientDBODocumentDelegate
         def scope = com.intellij.psi.search.GlobalSearchScope.allScope(project);

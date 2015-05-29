@@ -16,11 +16,17 @@ class Person {
 
 	List<String> strings = []
 
+	List<City> cities
+
+	Set<City> citiesSet
+
 	static transients = ['strings']
 
 	static mapping = {
 		id(field: '@rid')
 		city(type: OType.LINK, fetch: 'eager')
 		profile(type: OType.EMBEDDED)
+		cities(type: OType.LINKLIST)
+		citiesSet(type: OType.LINKSET)
 	}
 }

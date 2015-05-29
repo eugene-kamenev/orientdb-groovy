@@ -78,11 +78,25 @@ class OrientDocumentTransformationsTest extends Specification {
             db.begin()
                 person.save()
             db.commit()
-        Person person1 = Person.executeQuery('select from Person where profile <> ?', null).first()
+        Person person1 = Person.executeQuery('select from Person where profile[isPublic] = ?', true).first()
         then: 'check entities'
             person1 != null
             person1.profile != null
             person1.profile.isPublic
             person1.profile.phones.size() == 3
+    }
+
+    def 'test OType.LINKLIST OrientDB relationship'() {
+        given: 'test relationship creation'
+            def cities = [new City(title: 'Almaty'), new City(title: 'Astana')]
+            def person = new Person(cities: cities)
+        when: 'persist document to orientdb'
+            db.begin()
+                person.save()
+            db.commit()
+        Person person1 = Person.executeQuery('select from Person where cities.size() > ?', 0).first()
+        then: 'check entities'
+            person1.cities.size() == 2
+
     }
 }
