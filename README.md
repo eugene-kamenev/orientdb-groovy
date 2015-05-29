@@ -47,17 +47,29 @@ With this library we can simplify it
 ```groovy
 @OrientDocument
 @CompileStatic // yes it is fully supported
+class City {
+    String id
+    String title
+
+    static mapping = {
+        id(field: 'rid')
+    }
+}
+
+@OrientDocument
+@CompileStatic
 class User {
     String id
     String firstName
     Date birthDay
-
+    City city
     List<String> strings
 
     static transients = ['strings'] // this property will not be persisted into database
 
     static mapping = {
         id(field: 'rid')
+        city(type: OType.LINK) // handle relationship via OrientDB Link
         birthDay(field: 'birth_date')
     }
 }
