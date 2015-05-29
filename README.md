@@ -4,6 +4,9 @@ In this project I am trying to provide Groovy way to work with orientdb as simpl
 This project contains Groovy AST Transformations trying to mimic grails-entity style.
 All useful information you can find in Spock tests dir.
 
+And here is an example how I will use it with Spring Boot transactions
+https://github.com/eugene-kamenev/orientdb-spring-boot-example
+
 I know about OrientDB object-api, but anyway I started to create this one.
 I will adopt it for managing relationships also (for now simple links supported).
 
