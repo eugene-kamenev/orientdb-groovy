@@ -61,10 +61,10 @@ class User {
         birthDay(field: 'birth_date')
     }
 }
-
+```
 ###IDE Support
 This lib contains *.gdsl script for IntelliJ IDEA, it will work even in Community Edition, so code completion is not a problem.
-```
+
 ###Quering
 ```groovy
     List<User> userList = User.executeQuery('select from User where firstName=?', 'Bart')
