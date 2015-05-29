@@ -20,7 +20,7 @@ class Person {
 
 	static mapping = {
 		id(field: '@rid')
-		city(type: OType.LINK)
+		city(type: OType.LINK, fetch: 'eager')
 		profile(type: OType.EMBEDDED)
 	}
 }

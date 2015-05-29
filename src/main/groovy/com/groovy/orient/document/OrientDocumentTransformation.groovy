@@ -48,7 +48,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
             !(it.name in transients) && !(it.static) && (it.modifiers != ACC_TRANSIENT) && (it.name != 'document')
         }
         def mappingClosure = annotatedClass.getField('mapping')
-        def mapping = createEntityMappingMap(mappingClosure.initialExpression as ClosureExpression)
+        def mapping = createEntityMappingMap(annotatedClass, mappingClosure.initialExpression as ClosureExpression)
         fields.each {
             createPropertyGetter(annotatedClass, it, documentFieldNode, mapping[it.name])
             createPropertySetter(annotatedClass, it, documentFieldNode, mapping[it.name])
@@ -69,25 +69,48 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         classNode.addConstructor(documentConstructor)
     }
 
-    private static Map<String, Map> createEntityMappingMap(ClosureExpression expression) {
+    private static Map<String, Map> createEntityMappingMap(ClassNode classNode, ClosureExpression expression) {
         def mapping = [:]
         def block = expression.code as BlockStatement
         block.statements.each {
-            parseMappingExpression((it as ExpressionStatement).expression as MethodCallExpression, mapping)
+            parseMappingExpression(classNode, (it as ExpressionStatement).expression as MethodCallExpression, mapping)
         }
         mapping
     }
 
-    private static void parseMappingExpression(MethodCallExpression methodCallExpression, Map<String, Map> map) {
+    private static modifyConstructorForEagerFetch(ClassNode classNode, String eagerField) {
+        classNode.getDeclaredConstructors().each {
+            def parameters = it.parameters
+            if (parameters) {
+                def firstParam = parameters.first()
+                def expression = it.code as ExpressionStatement
+                def newBlock = block(expression)
+                newBlock.addStatement(stmt(callX(varX(firstParam), 'field', args(constX(eagerField)))))
+                it.code = newBlock
+            }
+        }
+    }
+
+    private
+    static void parseMappingExpression(ClassNode classNode, MethodCallExpression methodCallExpression, Map<String, Map> map) {
         String name = ASTUtil.parseValue(methodCallExpression.method)
         def args = (methodCallExpression.arguments as TupleExpression).expressions.first() as NamedArgumentListExpression
         map[name] = [:]
         for (arg in args.mapEntryExpressions) {
             def key = ASTUtil.parseValue(arg.keyExpression)
-            if (key == 'type') {
-                map[name][key] = arg.valueExpression
-            } else {
-                map[name][key] = arg.valueExpression.text
+            switch (key) {
+                case 'type':
+                    map[name][key] = arg.valueExpression
+                    break;
+                case 'fetch':
+                    if (arg.valueExpression.text == 'eager') {
+                        modifyConstructorForEagerFetch(classNode, name)
+                    }
+                    map[name][key] = arg.valueExpression.text
+                    break;
+                default:
+                    map[name][key] = arg.valueExpression.text
+                    break;
             }
         }
     }
