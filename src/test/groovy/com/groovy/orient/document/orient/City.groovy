@@ -1,12 +1,13 @@
 package com.groovy.orient.document.orient
 
+import com.groovy.orient.document.OrientDocument
+
+@OrientDocument
 class City {
-	Integer id
+	String id
 	String title
 
-	static belongsTo = [country: Country]
-
 	static mapping = {
-		id id: true
+		id(field: '@rid')
 	}
 }

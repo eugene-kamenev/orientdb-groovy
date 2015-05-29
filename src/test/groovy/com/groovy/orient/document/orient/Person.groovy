@@ -1,5 +1,6 @@
 package com.groovy.orient.document.orient
 import com.groovy.orient.document.OrientDocument
+import com.orientechnologies.orient.core.metadata.schema.OType
 import groovy.transform.CompileStatic
 
 @CompileStatic
@@ -8,7 +9,8 @@ class Person {
 	String id
 	String firstName
 	String lastName
-	Date birthDate
+
+	City city
 
 	List<String> strings = []
 
@@ -16,6 +18,6 @@ class Person {
 
 	static mapping = {
 		id(field: '@rid')
-		birthDate(field: 'birthdate')
+		city(field: 'city', type: OType.LINK)
 	}
 }

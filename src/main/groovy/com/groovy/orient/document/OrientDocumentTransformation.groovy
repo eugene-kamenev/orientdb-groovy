@@ -1,15 +1,12 @@
 package com.groovy.orient.document
 
+import com.groovy.orient.OrientDSL
 import com.groovy.orient.document.util.ASTUtil
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument
 import groovy.transform.CompileStatic
 import org.codehaus.groovy.ast.*
-import org.codehaus.groovy.ast.expr.ClosureExpression
-import org.codehaus.groovy.ast.expr.EmptyExpression
-import org.codehaus.groovy.ast.expr.MethodCallExpression
-import org.codehaus.groovy.ast.expr.NamedArgumentListExpression
-import org.codehaus.groovy.ast.expr.TupleExpression
+import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.control.CompilePhase
@@ -32,6 +29,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     static final ClassNode document = ClassHelper.make(ODocument).plainNodeReference
     static final ClassNode otype = ClassHelper.make(OType).plainNodeReference
     static final ClassNode delegateNode = ClassHelper.make(Delegate).plainNodeReference
+    static final ClassNode orientDSL = ClassHelper.make(OrientDSL).plainNodeReference
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -39,7 +37,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         ClassNode annotatedClass = (ClassNode) nodes[1];
         String clusterName = ASTUtil.parseValue(annotation.members.value, annotatedClass.nameWithoutPackage)
         List<String> transients = ASTUtil.parseValue(annotatedClass.getField('transients')?.initialExpression, []) as List<String>
-        def documentFieldNode = annotatedClass.addField('document', ACC_PRIVATE | ACC_FINAL, document, new EmptyExpression())
+        def documentFieldNode = annotatedClass.addField('document', ACC_PUBLIC | ACC_FINAL, document, new EmptyExpression())
         createConstructors(annotatedClass, clusterName, documentFieldNode)
         def fields = annotatedClass.fields.findAll {
             if (it.name == 'document') {
@@ -52,8 +50,8 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         def mappingClosure = annotatedClass.getField('mapping')
         def mapping = createEntityMappingMap(mappingClosure.initialExpression as ClosureExpression)
         fields.each {
-            createPropertyGetter(annotatedClass, it, mapping[it.name])
-            createPropertySetter(annotatedClass, it, mapping[it.name])
+            createPropertyGetter(annotatedClass, it, documentFieldNode, mapping[it.name])
+            createPropertySetter(annotatedClass, it, documentFieldNode, mapping[it.name])
             ASTUtil.removeProperty(annotatedClass, it.name)
         }
 
@@ -84,23 +82,48 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         def args = (methodCallExpression.arguments as TupleExpression).expressions.first() as NamedArgumentListExpression
         map[name] = [:]
         for (arg in args.mapEntryExpressions) {
-            map[name][ASTUtil.parseValue(arg.keyExpression)] = ASTUtil.parseValue(arg.valueExpression)
+            def key = ASTUtil.parseValue(arg.keyExpression)
+            if (key == 'type') {
+                map[name][key] = arg.valueExpression
+            } else {
+                map[name][key] = arg.valueExpression.text
+            }
         }
     }
 
-    private static void createPropertyGetter(ClassNode clazzNode, FieldNode field, Map map) {
+    private static void createPropertyGetter(ClassNode clazzNode, FieldNode field, FieldNode documentField, Map map) {
         def fieldName = map?.field ? map?.field : field.name
-        def getterStatement = returnS(castX(field.type, callX(varX('document'), 'field', args(constX(fieldName)))))
-        def method = new MethodNode("get${field.name.capitalize()}", ACC_PUBLIC, field.type, [] as Parameter[], [] as ClassNode[], getterStatement)
+        def otype = map?.type as PropertyExpression
+        def resultVar = varX('result', field.type)
+        def resultBlock = block(declS(resultVar, new EmptyExpression()))
+        if (otype) {
+            if (otype.text.endsWith('LINK')) {
+                resultBlock.addStatement(assignS(resultVar, ctorX(field.type, args(castX(document, callX(varX(documentField), 'field', args(constX(fieldName))))))))
+            }
+        } else {
+            resultBlock.addStatement(assignS(varX(resultVar), castX(field.type, callX(varX(documentField), 'field', args(constX(fieldName))))))
+        }
+        resultBlock.addStatement(returnS(varX(resultVar)))
+        def method = new MethodNode("get${field.name.capitalize()}", ACC_PUBLIC, field.type, [] as Parameter[], [] as ClassNode[], resultBlock)
         clazzNode.addMethod(method)
     }
 
-    private static void createPropertySetter(ClassNode clazzNode, FieldNode field, Map map) {
+    private static void createPropertySetter(ClassNode clazzNode, FieldNode field, FieldNode documentField, Map map) {
         def fieldName = map?.field ? map?.field : field.name
+        def otype = map?.type as PropertyExpression
+        def setterBlock = block()
         def setterParam = param(field.type, field.name)
         def setterVar = varX(setterParam)
-        def setterStatement = stmt(callX(varX('document'), 'field', args(constX(fieldName), setterVar)))
-        def method = new MethodNode("set${field.name.capitalize()}", ACC_PUBLIC, ClassHelper.VOID_TYPE, params(setterParam), [] as ClassNode[], setterStatement)
+        def args = args(constX(fieldName))
+        if (otype) {
+            if (otype.text.endsWith('LINK')) {
+                args.addExpression(propX(varX(setterVar), 'document'))
+            }
+        } else {
+            args.addExpression(setterVar)
+        }
+        setterBlock.addStatement stmt(callX(varX(documentField), 'field', args))
+        def method = new MethodNode("set${field.name.capitalize()}", ACC_PUBLIC, ClassHelper.VOID_TYPE, params(setterParam), [] as ClassNode[], setterBlock)
         clazzNode.addMethod(method)
     }
 

@@ -1,5 +1,5 @@
 package com.groovy.orient.document.tests
-
+import com.groovy.orient.document.orient.City
 import com.groovy.orient.document.orient.Person
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
 import spock.lang.Shared
@@ -53,5 +53,17 @@ class OrientDocumentTransformationsTest extends Specification {
             assert gomer.firstName == 'Gomer'
             assert lara.firstName == 'Lara'
             assert bart.firstName == 'Bart'
+    }
+
+    def 'test OType.LINK'() {
+        given: 'test relationship creation'
+            def person = new Person(city: new City(title: 'title'))
+        when:
+            db.begin()
+                person.save()
+            db.commit()
+        then:
+            person.id != null
+            person.city != null
     }
 }
