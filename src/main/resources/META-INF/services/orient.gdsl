@@ -1,0 +1,41 @@
+import org.codehaus.groovy.ast.builder.AstBuilder
+
+contributor(context(scope: annotatedScope(ctype: "com.groovy.orient.document.OrientDocument"))) {
+        classType?.fields?.each {
+            method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': String.name, type: String.name]
+        }
+}
+
+contributor(context()) {
+    if (classType?.hasAnnotation('com.groovy.orient.document.OrientDocument')) {
+        method name: 'executeQuery', type: "List<$classType.name>", params: ['query':String.name, 'params':'Object[]']
+        property name: 'document', type: 'com.orientechnologies.orient.core.record.impl.ODocument'
+        // find OrientDBODocumentDelegate
+        def scope = com.intellij.psi.search.GlobalSearchScope.allScope(project);
+        def clazz = com.intellij.psi.JavaPsiFacade.getInstance(project).findClass('com.orientechnologies.orient.core.record.impl.ODocument', scope);
+        delegatesTo(clazz)
+    }
+}
+
+
+private injectDocumentMethods() {
+    AstBuilder
+}
+
+/*private List getMethodNames(BinaryExpression expression) {
+    def methodNames = []
+    def closure = expression.rightExpression as ClosureExpression
+    def closureStatement = closure.code as BlockStatement
+    closureStatement.statements.each {
+        if (it instanceof ExpressionStatement) {
+            def expr = it as ExpressionStatement
+            def methodCall = expr.expression as MethodCallExpression
+            methodNames << methodCall.methodAsString
+        } else if (it instanceof ReturnStatement) {
+            if (it.expression instanceof MethodCallExpression) {
+                methodNames << it.expression.methodAsString
+            }
+        }
+    }
+    return methodNames
+}*/

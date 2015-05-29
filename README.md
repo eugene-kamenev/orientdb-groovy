@@ -13,6 +13,7 @@ I cant name it User in java because it is wrapper :)
 public class UserWrapper {
 
     private ODocument document;
+    private List<String> strings;
 
     UserWrapper() {
         this.document = new ODocument()
@@ -45,7 +46,8 @@ With this library we can simplify it
 
 ```groovy
 @OrientDocument
-class User implements AsDocument {
+@CompileStatic // yes it is fully supported
+class User {
     String id
     String firstName
     Date birthDay
@@ -55,10 +57,13 @@ class User implements AsDocument {
     static transients = ['strings'] // this property will not be persisted into database
 
     static mapping = {
-        id field: 'rid'
-        birthDay field: 'birth_date'
+        id(field: 'rid')
+        birthDay(field: 'birth_date')
     }
 }
+
+###IDE Support
+This lib contains *.gdsl script for IntelliJ IDEA, it will work even in Community Edition, so code completion is not a problem.
 ```
 ###Quering
 ```groovy
@@ -80,4 +85,4 @@ class User implements AsDocument {
 ##### 1. Take mapping closure and read mapping properties from it
 ##### 2. Create empty constructor and ODocument one
 ##### 3. Delete properties and create needed getters and setters
-##### 4. As you implement AsDocument trait, your class would have delegate methods to ODocument, so you can simply call user.save() or access document instance directly with user.document
+##### 4. You will have delegate methods to ODocument inside methods, so you can simply call user.save() or access document instance directly with user.document

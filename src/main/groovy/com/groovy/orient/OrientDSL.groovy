@@ -2,12 +2,14 @@ package com.groovy.orient
 
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
+import groovy.transform.CompileStatic
 
+@CompileStatic
 class OrientDSL {
 
    /**
      * Provides simple static query execution
-     *  Note that orient database should be already attached to thread
+     *  Note that gdsl.orient database should be already attached to thread
      *
      * @param query
      * @param params
