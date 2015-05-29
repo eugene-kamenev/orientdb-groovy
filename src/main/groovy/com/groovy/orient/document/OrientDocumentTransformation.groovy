@@ -54,8 +54,9 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
             createPropertySetter(annotatedClass, it, documentFieldNode, mapping[it.name])
             ASTUtil.removeProperty(annotatedClass, it.name)
         }
-
+        // clean up
         ASTUtil.removeProperty(annotatedClass, 'mapping')
+        ASTUtil.removeProperty(annotatedClass, 'transients')
     }
 
     private void createConstructors(ClassNode classNode, String orientCluster, FieldNode thisDocument) {

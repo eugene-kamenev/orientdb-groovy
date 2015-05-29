@@ -29,13 +29,13 @@ class OrientDocumentTransformationsTest extends Specification {
 
     def 'test that transformation applied right'() {
         given: 'test person entity class'
-            def person = new Person(firstName: 'Gomer Simpson')
+            def person = new Person(firstName: 'AnyName')
         when: 'start transaction and save document'
             db.begin()
                 person.save()
             db.commit()
         then: 'assert that firstName equals to assigned before'
-            assert person.firstName == 'Gomer Simpson'
+            assert person.firstName == 'AnyName'
     }
 
     def 'test query execution method with different params'() {
