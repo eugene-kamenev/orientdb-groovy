@@ -32,7 +32,7 @@ class OrientDocumentTransformationsTest extends Specification {
             def person = new Person(firstName: 'Gomer Simpson')
         when: 'start transaction and save document'
             db.begin()
-            person.save()
+                person.save()
             db.commit()
         then: 'assert that firstName equals to assigned before'
             assert person.firstName == 'Gomer Simpson'
@@ -41,9 +41,9 @@ class OrientDocumentTransformationsTest extends Specification {
     def 'test query execution method with different params'() {
         given: 'insert new persons'
             db.begin()
-            new Person(lastName: 'Simpson', firstName: 'Gomer').save()
-            new Person(lastName: 'Simpson', firstName: 'Lara').save()
-            new Person(lastName: 'Simpson', firstName: 'Bart').save()
+                new Person(lastName: 'Simpson', firstName: 'Gomer').save()
+                new Person(lastName: 'Simpson', firstName: 'Lara').save()
+                new Person(lastName: 'Simpson', firstName: 'Bart').save()
             db.commit()
         when: 'execute queries'
             Person gomer = Person.executeQuery('select from Person where firstName=?', 'Gomer').first()
@@ -55,15 +55,16 @@ class OrientDocumentTransformationsTest extends Specification {
             assert bart.firstName == 'Bart'
     }
 
-    def 'test OType.LINK'() {
+    def 'test OType.LINK OrientDB relationship'() {
         given: 'test relationship creation'
-            def person = new Person(city: new City(title: 'title'))
-        when:
+            def person = new Person(city: new City(title: 'New York'))
+        when: 'persist documents to orientdb'
             db.begin()
                 person.save()
             db.commit()
-        then:
+        then: 'check that entities have generated ids'
             person.id != null
-            person.city != null
+            person.city.id != null
+            Person.executeQuery('select from Person where city.title = ?', 'New York').size() != 0
     }
 }
