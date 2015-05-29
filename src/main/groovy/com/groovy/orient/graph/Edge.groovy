@@ -1,4 +1,4 @@
-package com.groovy.orient.document
+package com.groovy.orient.graph
 
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
@@ -8,14 +8,11 @@ import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 
 /**
- * Annotation should be used to mark entity class
- * @param value can be used to choose different orientDB class name
- *
  * @author @eugenekamenev
  */
 @Target([ElementType.TYPE])
 @Retention(RetentionPolicy.SOURCE)
-@GroovyASTTransformationClass(['com.groovy.orient.document.OrientDocumentTransformation'])
-@interface OrientDocument {
-    String value() default ''
+@GroovyASTTransformationClass(['grails.graph.ferma.EdgeTransformation'])
+@interface Edge {
+
 }

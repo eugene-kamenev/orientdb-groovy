@@ -31,6 +31,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     static final ClassNode delegateNode = ClassHelper.make(Delegate).plainNodeReference
     static final ClassNode orientDSL = ClassHelper.make(OrientDSL).plainNodeReference
     static final ClassNode listNode = ClassHelper.make(List).plainNodeReference
+    static final ClassNode setNode = ClassHelper.make(HashSet).plainNodeReference
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -122,16 +123,17 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         def resultVar = varX('result', field.type)
         def resultBlock = block(declS(resultVar, new EmptyExpression()))
         if (otype) {
-            if (otype.text.endsWith('LINK')) {
-                resultBlock.addStatement(assignS(resultVar, ctorX(field.type, args(castX(document, callX(varX(documentField), 'field', args(constX(fieldName))))))))
-            }
-            if (otype.text.endsWith('EMBEDDED')) {
+            if (otype.text.endsWith('LINK') || otype.text.endsWith('EMBEDDED')) {
                 resultBlock.addStatement(assignS(resultVar, ctorX(field.type, args(castX(document, callX(varX(documentField), 'field', args(constX(fieldName))))))))
             }
             if (otype.text.endsWith('LINKLIST')) {
                 def genericNode = field.type.genericsTypes[0]
                 def getter = castX(listNode, callX(varX(documentField), 'field', args(constX(fieldName))), true)
                 resultBlock.addStatement(assignS(resultVar, callX(orientDSL, 'transformDocumentCollection', args(classX(genericNode.type.plainNodeReference), otype, getter))))
+            }
+            if (otype.text.endsWith('LINKSET')) {
+                def genericNode = field.type.genericsTypes[0]
+               // def getter = castX(setNode, callX(varX(documentField)))
             }
         } else {
             resultBlock.addStatement(assignS(varX(resultVar), castX(field.type, callX(varX(documentField), 'field', args(constX(fieldName))))))
@@ -149,14 +151,14 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         def setterVar = varX(setterParam)
         def arguments = args(constX(fieldName))
         if (otype) {
-            if (otype.text.endsWith('LINK')) {
-                arguments.addExpression(propX(varX(setterVar), 'document'))
-            }
-            if (otype.text.endsWith('EMBEDDED')) {
+            if (otype.text.endsWith('LINK') || otype.text.endsWith('EMBEDDED')) {
                 arguments.addExpression(propX(varX(setterVar), 'document'))
             }
             if (otype.text.endsWith('LINKLIST')) {
                 arguments.addExpression(castX(listNode, callX(orientDSL, 'transformEntityCollection', args(setterVar))))
+            }
+            if (otype.text.endsWith('LINKSET')) {
+               // arguments.addExpression(castX(listNode))
             }
             arguments.addExpression(otype)
         } else {
