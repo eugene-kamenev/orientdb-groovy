@@ -93,7 +93,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     }
 
     private static void createPropertyGetter(ClassNode clazzNode, FieldNode field, FieldNode documentField, Map map) {
-        def fieldName = map?.field ? map?.field : field.name
+        def fieldName = map?.field ?: field.name
         def otype = map?.type as PropertyExpression
         def resultVar = varX('result', field.type)
         def resultBlock = block(declS(resultVar, new EmptyExpression()))
@@ -110,7 +110,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     }
 
     private static void createPropertySetter(ClassNode clazzNode, FieldNode field, FieldNode documentField, Map map) {
-        def fieldName = map?.field ? map?.field : field.name
+        def fieldName = map?.field ?: field.name
         def otype = map?.type as PropertyExpression
         def setterBlock = block()
         def setterParam = param(field.type, field.name)
