@@ -92,3 +92,5 @@ class Country {
     def personList = Person.executeQuery('select from Person where firstName=?', 'Bart')
     def personList2 = User.executeQuery('select from User where firstName=:a and lastName like :b', [a: 'Bart', b: '%Simpson%'])
 ```
+
+Check [OrientDocumentTransformationsTest](https://github.com/eugene-kamenev/orientdb-groovy/blob/master/src/test/groovy/com/groovy/orient/document/tests/OrientDocumentTransformationsTest.groovy) for more details.
