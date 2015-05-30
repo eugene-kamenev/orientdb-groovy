@@ -99,4 +99,17 @@ class OrientDocumentTransformationsTest extends Specification {
             person1.cities.size() == 2
 
     }
+
+    def 'test OType.LINKSET OrientDB relationship'() {
+        given: 'test relationship creation'
+            def cities = [new City(title: 'Almaty'), new City(title: 'Astana')]
+            def person = new Person(citiesSet: cities)
+        when: 'persist document to orientdb'
+            db.begin()
+                person.save()
+            db.commit()
+        Person person1 = Person.executeQuery('select from Person where citiesSet.size() > ?', 0).first()
+        then: 'check entities'
+            person1.citiesSet.size() == 2
+    }
 }

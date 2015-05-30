@@ -2,6 +2,7 @@ group 'grails-orientdb-tests'
 version '1.0'
 
 apply plugin: 'groovy'
+apply plugin: 'idea'
 
 sourceCompatibility = 1.6
 
@@ -17,6 +18,6 @@ dependencies {
     compile 'com.orientechnologies:orientdb-core:2.1-rc3'
     compile 'com.orientechnologies:orientdb-client:2.1-rc3'
     compile 'com.tinkerpop.blueprints:blueprints-core:2.6.0'
-    compile 'com.syncleus.ferma:ferma:2.0.5'
+    compile 'com.syncleus.ferma:ferma:2.0.4'
     testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
 }

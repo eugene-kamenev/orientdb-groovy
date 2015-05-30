@@ -36,7 +36,7 @@ class OrientDSL {
         }
         switch (type) {
             case OType.LINKSET:
-                return new LinkedHashSet<T>(collection);
+                return new LinkedHashSet<T>(collection)
                 break;
         }
         return collection
