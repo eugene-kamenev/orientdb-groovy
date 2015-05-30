@@ -85,10 +85,11 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
             def parameters = it.parameters
             if (parameters) {
                 def firstParam = parameters.first()
-                def expression = it.code as ExpressionStatement
-                def newBlock = block(expression)
-                newBlock.addStatement(stmt(callX(varX(firstParam), 'field', args(constX(eagerField)))))
-                it.code = newBlock
+                if (firstParam.name == 'document1') {
+                    def codeBlock = it.code instanceof ExpressionStatement ? block(it.code) : it.code as BlockStatement
+                    codeBlock.addStatement(stmt(callX(varX(firstParam), 'field', args(constX(eagerField)))))
+                    it.code = codeBlock
+                }
             }
         }
     }

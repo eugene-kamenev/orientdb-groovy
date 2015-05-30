@@ -26,7 +26,7 @@ class Person {
 		id(field: '@rid')
 		city(type: OType.LINK, fetch: 'eager')
 		profile(type: OType.EMBEDDED)
-		cities(type: OType.LINKLIST)
+		cities(type: OType.LINKLIST, fetch: 'eager')
 		citiesSet(type: OType.LINKSET)
 	}
 }
