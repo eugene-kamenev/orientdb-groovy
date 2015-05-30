@@ -8,46 +8,11 @@ And here is an example how I will use it with Spring Boot transactions
 https://github.com/eugene-kamenev/orientdb-spring-boot-example
 
 I know about OrientDB object-api, but anyway I started to create this one.
-I will adopt it for managing relationships also (for now simple links supported).
+
+###IDE Support
+This lib contains *.gdsl script for IntelliJ IDEA, it will work even in Community Edition, so you will feel very nice code completion. No red 'missing' methods!
 
 ##Example usage
-I cant name it User in java because it is wrapper :)
-
-```java
-public class UserWrapper {
-
-    private ODocument document;
-    private List<String> strings;
-
-    UserWrapper() {
-        this.document = new ODocument()
-    }
-
-    UserWrapper(ODocument document) {
-        this.document = document
-    }
-
-    String getId() {
-        return this.document.getIdentity().toString()
-    }
-
-    String getFirstName() {
-        return (String) this.document.field("firstName")
-    }
-
-    void setFirstName(String firstName) {
-        this.document.field("firstName", firstName)
-    }
-
-    Date getBirthday() {
-        return (Date) this.document.field("birth_date") // different "birth_date" field name
-    }
-
-    // etc..
-}
-```
-With this library we can simplify it
-
 ```groovy
 @OrientDocument
 @CompileStatic // yes it is fully supported
@@ -56,49 +21,74 @@ class City {
     String title
 
     static mapping = {
-        id(field: 'rid')
+        id(field: '@rid')
     }
 }
 
 @OrientDocument
 @CompileStatic
-class User {
-    String id
-    String firstName
-    Date birthDay
+class Profile {
+    String email
     City city
-    List<String> strings
+    Date birthday
+    List<String> phones
+    Boolean isPublic
 
-    static transients = ['strings'] // this property will not be persisted into database
+    Integer years
+
+    static transients = ['years'] // this property will not be persisted
 
     static mapping = {
-        id(field: 'rid')
-        city(type: OType.LINK) // handle relationship via OrientDB Link
-        birthDay(field: 'birth_date')
+        birthday(field: 'birth_date')
+        phones(field: 'user_phones')
+        city(type: OType.LINK, fetch: 'eager')
+    }
+
+    Integer getYears() {
+        this.years = TimeCategory.minus(new Date(), this.birthday).years
     }
 }
+
+@OrientDocument
+@CompileStatic
+class Person {
+    String id
+    String firstName
+    String lastName
+
+    Profile profile
+
+    static mapping = {
+        id(field: '@rid')
+        profile(type: OType.EMBEDDED)
+    }
+}
+
+@OrientDocument
+@CompileStatic
+class Country {
+    String id
+    String title
+    List<City> cities
+
+    static mapping = {
+        id(field: '@rid')
+        cities(type: OType.LINKLIST)
+    }
+}
+
 ```
-###IDE Support
-This lib contains *.gdsl script for IntelliJ IDEA, it will work even in Community Edition, so code completion is not a problem.
+### Document creation
+```groovy
+    def phones = ['+900000000', '+800000000', '+7000000']
+    def city = new City(title: 'New York')
+    def profile = new Profile(isPublic: true, phones: phones, city: city, birthDay: new Date())
+    def person = new Person(profile: profile, firstName: 'PersonFirstName', lastName: 'PersonLastName')
+    person.save()
+```
 
 ###Quering
 ```groovy
-    List<User> userList = User.executeQuery('select from User where firstName=?', 'Bart')
-    List<User> userList2 = User.executeQuery('select from User where firstName=:a and lastName=:b', [a: 'Bart', b: 'Simpson'])
+    def personList = Person.executeQuery('select from Person where firstName=?', 'Bart')
+    def personList2 = User.executeQuery('select from User where firstName=:a and lastName like :b', [a: 'Bart', b: '%Simpson%'])
 ```
-###Document creation
-
-```groovy
- // default groovy lang style constructors supported :)
- def person = new Person(firstName: 'First Name', lastName: 'LastName', birthDay: new Date())
- person.save() // or person.document.save()
- // you can access document properties with groovy syntax sugar
- assert person.firstName == 'First Name' // this will call a getter getFirstName()
-```
-
-## How it works in details
-``` @OrientDocument ``` annotation will apply AST Transformation which will transform your class similar to java one showed before.
-##### 1. Take mapping closure and read mapping properties from it
-##### 2. Create empty constructor and ODocument one
-##### 3. Delete properties and create needed getters and setters
-##### 4. You will have delegate methods to ODocument inside methods, so you can simply call user.save() or access document instance directly with user.document
