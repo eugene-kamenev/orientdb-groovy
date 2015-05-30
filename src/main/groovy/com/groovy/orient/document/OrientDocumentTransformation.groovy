@@ -32,6 +32,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     static final ClassNode orientDSL = ClassHelper.make(OrientDSL).plainNodeReference
     static final ClassNode listNode = ClassHelper.make(List).plainNodeReference
     static final ClassNode setNode = ClassHelper.make(LinkedHashSet).plainNodeReference
+    static final List<ClassNode> collectionNodes = [listNode, setNode]
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -105,6 +106,9 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
                 case 'type':
                     map[name][key] = arg.valueExpression
                     break;
+                case 'params':
+                    map[name][key] = arg.valueExpression
+                    break;
                 case 'fetch':
                     if (arg.valueExpression.text == 'eager') {
                         modifyConstructorForEagerFetch(classNode, name)
@@ -123,22 +127,33 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         def otype = map?.type as PropertyExpression
         def resultVar = varX('result', field.type)
         def resultBlock = block(declS(resultVar, new EmptyExpression()))
-        if (otype) {
-            if (otype.text.endsWith('LINK') || otype.text.endsWith('EMBEDDED')) {
-                resultBlock.addStatement(assignS(resultVar, ctorX(field.type, args(castX(document, callX(varX(documentField), 'field', args(constX(fieldName))))))))
+        if (map?.formula) {
+            def query = map.formula
+            ClassNode queryClassNode
+            if (field.type.plainNodeReference in collectionNodes) {
+                queryClassNode = field.type.genericsTypes[0].type.plainNodeReference
+            } else {
+                queryClassNode = field.type
             }
-            if (otype.text.endsWith('LINKLIST')) {
-                def genericNode = field.type.genericsTypes[0].type.plainNodeReference
-                def getter = castX(listNode, callX(varX(documentField), 'field', args(constX(fieldName))), true)
-                resultBlock.addStatement(assignS(resultVar, callX(orientDSL, 'transformDocumentCollection', args(classX(genericNode), otype, getter))))
-            }
-            if (otype.text.endsWith('LINKSET')) {
-                def genericNode = field.type.genericsTypes[0].type.plainNodeReference
-                def getter = castX(setNode, callX(varX(documentField), 'field', args(constX(fieldName))), true)
-                resultBlock.addStatement(assignS(resultVar, callX(orientDSL, 'transformDocumentCollection', args(classX(genericNode), otype, getter))))
-            }
+            resultBlock.addStatement(assignS(resultVar, callX(orientDSL, 'executeQuery', args(classX(queryClassNode), constX(query), map?.params as Expression))))
         } else {
-            resultBlock.addStatement(assignS(varX(resultVar), castX(field.type, callX(varX(documentField), 'field', args(constX(fieldName))))))
+            if (otype) {
+                if (otype.text.endsWith('LINK') || otype.text.endsWith('EMBEDDED')) {
+                    resultBlock.addStatement(assignS(resultVar, ctorX(field.type, args(castX(document, callX(varX(documentField), 'field', args(constX(fieldName))))))))
+                }
+                if (otype.text.endsWith('LINKLIST')) {
+                    def genericNode = field.type.genericsTypes[0].type.plainNodeReference
+                    def getter = castX(listNode, callX(varX(documentField), 'field', args(constX(fieldName))), true)
+                    resultBlock.addStatement(assignS(resultVar, callX(orientDSL, 'transformDocumentCollection', args(classX(genericNode), otype, getter))))
+                }
+                if (otype.text.endsWith('LINKSET')) {
+                    def genericNode = field.type.genericsTypes[0].type.plainNodeReference
+                    def getter = castX(setNode, callX(varX(documentField), 'field', args(constX(fieldName))), true)
+                    resultBlock.addStatement(assignS(resultVar, callX(orientDSL, 'transformDocumentCollection', args(classX(genericNode), otype, getter))))
+                }
+            } else {
+                resultBlock.addStatement(assignS(varX(resultVar), castX(field.type, callX(varX(documentField), 'field', args(constX(fieldName))))))
+            }
         }
         resultBlock.addStatement(returnS(varX(resultVar)))
         def method = new MethodNode("get${field.name.capitalize()}", ACC_PUBLIC, field.type, [] as Parameter[], [] as ClassNode[], resultBlock)
@@ -146,29 +161,31 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     }
 
     private static void createPropertySetter(ClassNode clazzNode, FieldNode field, FieldNode documentField, Map map) {
-        def fieldName = map?.field ?: field.name
-        def otype = map?.type as PropertyExpression
-        def setterBlock = block()
-        def setterParam = param(field.type, field.name)
-        def setterVar = varX(setterParam)
-        def arguments = args(constX(fieldName))
-        if (otype) {
-            if (otype.text.endsWith('LINK') || otype.text.endsWith('EMBEDDED')) {
-                arguments.addExpression(propX(varX(setterVar), 'document'))
+        if (!map?.formula) {
+            def fieldName = map?.field ?: field.name
+            def otype = map?.type as PropertyExpression
+            def setterBlock = block()
+            def setterParam = param(field.type, field.name)
+            def setterVar = varX(setterParam)
+            def arguments = args(constX(fieldName))
+            if (otype) {
+                if (otype.text.endsWith('LINK') || otype.text.endsWith('EMBEDDED')) {
+                    arguments.addExpression(propX(varX(setterVar), 'document'))
+                }
+                if (otype.text.endsWith('LINKLIST')) {
+                    arguments.addExpression(callX(orientDSL, 'transformEntityCollection', args(setterVar)))
+                }
+                if (otype.text.endsWith('LINKSET')) {
+                    arguments.addExpression(ctorX(setNode, args(callX(orientDSL, 'transformEntityCollection', args(setterVar)))))
+                }
+                arguments.addExpression(otype)
+            } else {
+                arguments.addExpression(setterVar)
             }
-            if (otype.text.endsWith('LINKLIST')) {
-                arguments.addExpression(callX(orientDSL, 'transformEntityCollection', args(setterVar)))
-            }
-            if (otype.text.endsWith('LINKSET')) {
-                arguments.addExpression(ctorX(setNode, args(callX(orientDSL, 'transformEntityCollection', args(setterVar)))))
-            }
-            arguments.addExpression(otype)
-        } else {
-            arguments.addExpression(setterVar)
+            setterBlock.addStatement stmt(callX(varX(documentField), 'field', arguments))
+            def method = new MethodNode("set${field.name.capitalize()}", ACC_PUBLIC, ClassHelper.VOID_TYPE, params(setterParam), [] as ClassNode[], setterBlock)
+            clazzNode.addMethod(method)
         }
-        setterBlock.addStatement stmt(callX(varX(documentField), 'field', arguments))
-        def method = new MethodNode("set${field.name.capitalize()}", ACC_PUBLIC, ClassHelper.VOID_TYPE, params(setterParam), [] as ClassNode[], setterBlock)
-        clazzNode.addMethod(method)
     }
 
 

@@ -20,6 +20,8 @@ class Person {
 
 	Set<City> citiesSet
 
+	List<City> cityFormula
+
 	static transients = ['strings']
 
 	static mapping = {
@@ -28,5 +30,6 @@ class Person {
 		profile(type: OType.EMBEDDED)
 		cities(type: OType.LINKLIST, fetch: 'eager')
 		citiesSet(type: OType.LINKSET)
+		cityFormula(formula: 'select from City where title=?', params: 'Las Vegas')
 	}
 }

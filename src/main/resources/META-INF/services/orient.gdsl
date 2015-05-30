@@ -1,8 +1,9 @@
 import org.codehaus.groovy.ast.builder.AstBuilder
 
 contributor(context(scope: annotatedScope(ctype: "com.groovy.orient.document.OrientDocument"))) {
+        def s = String.name
         classType?.fields?.each {
-            method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': String.name, type: String.name]
+            method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': s, type: s, formula: s]
         }
 }
 

@@ -112,4 +112,16 @@ class OrientDocumentTransformationsTest extends Specification {
         then: 'check entities'
             person1.citiesSet.size() == 2
     }
+
+    def 'test formula feature'() {
+        given: 'create City and Person entities'
+          def city = new City(title: 'Las Vegas')
+          def person = new Person()
+        when: 'persist into database'
+            db.begin()
+                city.save()
+            db.commit()
+        then: 'call formula method'
+         person.cityFormula.size() == 1
+    }
 }
