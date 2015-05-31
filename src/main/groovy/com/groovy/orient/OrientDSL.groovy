@@ -1,5 +1,6 @@
 package com.groovy.orient
 
+import com.orientechnologies.orient.core.id.ORecordId
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
@@ -24,6 +25,10 @@ class OrientDSL {
         def orientQuery = new OSQLSynchQuery<ODocument>(query)
         List<ODocument> result = (List<ODocument>) new ODocument().getDatabaseIfDefined().command(orientQuery).execute(params)
         (List<T>) transformDocumentCollection(clazz, OType.LINKLIST, result)
+    }
+
+    static <T> T get(Class<T> clazz, String rid) {
+        transformDocument(clazz, (ODocument) new ODocument().getDatabaseIfDefined().getRecord(new ORecordId(rid)))
     }
 
     static <T> T transformDocument(Class<T> clazz, ODocument document) {
