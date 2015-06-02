@@ -2,6 +2,7 @@ package com.groovy.orient.document
 
 import com.groovy.orient.OrientDSL
 import com.groovy.orient.document.util.ASTUtil
+import com.orientechnologies.orient.core.id.ORecordId
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument
 import groovy.transform.CompileStatic
@@ -27,6 +28,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 class OrientDocumentTransformation extends AbstractASTTransformation {
 
     static final ClassNode document = ClassHelper.make(ODocument).plainNodeReference
+    static final ClassNode recordIdNode = ClassHelper.make(ORecordId)
     static final ClassNode otype = ClassHelper.make(OType).plainNodeReference
     static final ClassNode delegateNode = ClassHelper.make(Delegate).plainNodeReference
     static final ClassNode orientDSL = ClassHelper.make(OrientDSL).plainNodeReference
@@ -63,13 +65,17 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     }
 
     private void createConstructors(ClassNode classNode, String orientCluster, FieldNode thisDocument) {
+        def recordIdParams = params(param(recordIdNode, 'recordId'))
+        def documentParameters = params(param(document, 'document1'))
+        def initStatementRecordId = stmt(assignX(varX('document'), ctorX(document, varX(documentParameters[0]))))
         def initStatement = stmt(assignX(varX('document'), ctorX(document, constX(orientCluster))))
         def emptyConstructor = new ConstructorNode(ACC_PUBLIC, initStatement)
-        def params = params(param(document, 'document1'))
-        def initStatementDocument = stmt(assignX(varX(thisDocument), varX(params[0])))
-        def documentConstructor = new ConstructorNode(ACC_PUBLIC, params, [] as ClassNode[], initStatementDocument)
+        def initStatementDocument = stmt(assignX(varX(thisDocument), varX(documentParameters[0])))
+        def documentConstructor = new ConstructorNode(ACC_PUBLIC, documentParameters, [] as ClassNode[], initStatementDocument)
+        def recordConnstructorNode = new ConstructorNode(ACC_PUBLIC, recordIdParams, [] as ClassNode[], initStatementRecordId)
         classNode.addConstructor(emptyConstructor)
         classNode.addConstructor(documentConstructor)
+        classNode.addConstructor(recordConnstructorNode)
     }
 
     private static Map<String, Map> createEntityMappingMap(ClassNode classNode, ClosureExpression expression) {
@@ -86,7 +92,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
             def parameters = it.parameters
             if (parameters) {
                 def firstParam = parameters.first()
-                if (firstParam.name == 'document1') {
+                if (firstParam.name == 'document1' || firstParam.name == 'recordId') {
                     def codeBlock = it.code instanceof ExpressionStatement ? block(it.code) : it.code as BlockStatement
                     codeBlock.addStatement(stmt(callX(varX(firstParam), 'field', args(constX(eagerField)))))
                     it.code = codeBlock

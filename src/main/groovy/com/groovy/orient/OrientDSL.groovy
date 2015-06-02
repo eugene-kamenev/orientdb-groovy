@@ -24,7 +24,7 @@ class OrientDSL {
     static <T> List<T> executeQuery(Class<T> clazz, String query, ... params) {
         def orientQuery = new OSQLSynchQuery<ODocument>(query)
         List<ODocument> result = (List<ODocument>) new ODocument().getDatabaseIfDefined().command(orientQuery).execute(params)
-        (List<T>) transformDocumentCollection(clazz, OType.LINKLIST, result)
+        (List<T>) transformDocumentCollection(clazz  , OType.LINKLIST, result)
     }
 
     static <T> T get(Class<T> clazz, String rid) {
