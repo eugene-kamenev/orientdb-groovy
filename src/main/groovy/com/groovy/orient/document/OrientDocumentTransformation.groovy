@@ -67,7 +67,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     private void createConstructors(ClassNode classNode, String orientCluster, FieldNode thisDocument) {
         def recordIdParams = params(param(recordIdNode, 'recordId'))
         def documentParameters = params(param(document, 'document1'))
-        def initStatementRecordId = stmt(assignX(varX('document'), ctorX(document, varX(documentParameters[0]))))
+        def initStatementRecordId = stmt(assignX(varX('document'), ctorX(document, varX(recordIdParams[0]))))
         def initStatement = stmt(assignX(varX('document'), ctorX(document, constX(orientCluster))))
         def emptyConstructor = new ConstructorNode(ACC_PUBLIC, initStatement)
         def initStatementDocument = stmt(assignX(varX(thisDocument), varX(documentParameters[0])))
