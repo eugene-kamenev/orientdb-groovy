@@ -31,13 +31,13 @@ class OrientDSL {
         transformDocument(clazz, (ODocument) new ODocument().getDatabaseIfDefined().getRecord(new ORecordId(rid)))
     }
 
-    static <T> T transformDocument(Class<T> clazz, ODocument document) {
+    static <T> T transformDocument(Class<T> clazz, Object document) {
         clazz.newInstance(document)
     }
 
     static <T> Iterable<T> transformDocumentCollection(Class<T> clazz, OType type, Iterable<?> documents) {
         def collection = documents.collect {
-            transformDocument(clazz, (ODocument) it)
+            transformDocument(clazz, it)
         }
         switch (type) {
             case OType.LINKSET:
