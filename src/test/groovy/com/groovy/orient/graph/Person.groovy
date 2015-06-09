@@ -13,6 +13,5 @@ class Person {
     static mapping = {
         livesIn(edge: Lives)
         visitedCities(edge: Visited)
-        addToLivesIn(new City(title: 'mother'))
     }
 }

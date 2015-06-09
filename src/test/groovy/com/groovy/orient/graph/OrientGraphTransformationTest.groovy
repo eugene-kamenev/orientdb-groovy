@@ -35,7 +35,7 @@ class OrientGraphTransformationTest extends Specification {
         def orient = new OrientGraph(db)
         orient.begin()
         and:
-        def first = new Person(firstName: 'Gomer55', lastName: 'ASDASDASDDDA')
+        def first = new Person(firstName: 'Gomer55', lastName: 'Simpson')
         def second = new Person(firstName: 'Bart', lastName: 'Simpson')
         def newYork = new City(title: 'New York')
         def amsterdam = new City(title: 'Amsterdam')
