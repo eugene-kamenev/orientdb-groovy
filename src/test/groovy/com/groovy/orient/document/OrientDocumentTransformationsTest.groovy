@@ -1,7 +1,5 @@
-package com.groovy.orient.document.tests
-import com.groovy.orient.document.orient.City
-import com.groovy.orient.document.orient.Person
-import com.groovy.orient.document.orient.Profile
+package com.groovy.orient.document
+
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
 import spock.lang.Shared
 import spock.lang.Specification

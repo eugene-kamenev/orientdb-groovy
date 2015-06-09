@@ -1,3 +1,3 @@
 moduleName=orient-db-dsl
 moduleVersion=0.1
-extensionClasses=com.groovy.orient.OrientDSL
+extensionClasses=com.groovy.orient.OrientDSL,com.groovy.orient.OrientGraphDSL

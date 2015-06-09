@@ -3,6 +3,7 @@ package com.groovy.orient.document.util
 import groovy.transform.CompileStatic
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.expr.ArrayExpression
+import org.codehaus.groovy.ast.expr.ClassExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.ast.expr.ListExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
@@ -45,6 +46,9 @@ class ASTUtil {
 	public static <T> T annotationValue(constant, T defaultValue = null) {
 		if (!constant) {
 			return (T) defaultValue
+		}
+		if (constant instanceof ClassExpression) {
+			return (T) constant.type
 		}
 		if (constant instanceof ArrayExpression) {
 			return (T) constant.expressions?.collect { (it as ConstantExpression).value }

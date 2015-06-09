@@ -1,6 +1,5 @@
-package com.groovy.orient.document.orient
+package com.groovy.orient.document
 
-import com.groovy.orient.document.OrientDocument
 import groovy.transform.CompileStatic
 
 @OrientDocument

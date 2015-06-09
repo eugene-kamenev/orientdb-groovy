@@ -53,7 +53,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
             !(it.name in transients) && !(it.static) && (it.modifiers != ACC_TRANSIENT) && (it.name != 'document')
         }
         def mappingClosure = annotatedClass.getField('mapping')
-        def mapping = createEntityMappingMap(annotatedClass, mappingClosure.initialExpression as ClosureExpression)
+        def mapping = createEntityMappingMap(annotatedClass, mappingClosure?.initialExpression as ClosureExpression)
         fields.each {
             createPropertyGetter(annotatedClass, it, documentFieldNode, mapping[it.name])
             createPropertySetter(annotatedClass, it, documentFieldNode, mapping[it.name])
@@ -80,6 +80,9 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
 
     private static Map<String, Map> createEntityMappingMap(ClassNode classNode, ClosureExpression expression) {
         def mapping = [:]
+        if (!expression) {
+            return mapping
+        }
         def block = expression.code as BlockStatement
         block.statements.each {
             parseMappingExpression(classNode, (it as ExpressionStatement).expression as MethodCallExpression, mapping)

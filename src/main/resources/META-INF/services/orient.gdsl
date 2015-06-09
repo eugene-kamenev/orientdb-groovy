@@ -1,42 +1,103 @@
 import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.stmt.ExpressionStatement
+import org.codehaus.groovy.control.CompilePhase
 
 contributor(context(scope: annotatedScope(ctype: "com.groovy.orient.document.OrientDocument"))) {
-        def s = String.name
-        classType?.fields?.each {
-            method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': s, type: s, formula: s]
-        }
+    def s = String.name
+    classType?.fields?.each {
+        method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': s, type: s, formula: s]
+    }
+}
+contributor(context(scope: annotatedScope(ctype: "com.groovy.orient.graph.Vertex"))) {
+    def s = String.name
+    classType?.fields?.each {
+        method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': s, type: s, formula: s]
+    }
+}
+contributor(context(scope: annotatedScope(ctype: "com.groovy.orient.graph.Edge"))) {
+    def s = String.name
+    classType?.fields?.each {
+        method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': s, type: s, formula: s]
+    }
 }
 
 contributor(context()) {
     if (classType?.hasAnnotation('com.groovy.orient.document.OrientDocument')) {
-        method(name: 'executeQuery', type: "List<$classType.name>", params: ['query':String.name, 'params':'Object[]'], isStatic: true)
+        method(name: 'executeQuery', type: "List<$classType.name>", params: ['query': String.name, 'params': 'Object[]'], isStatic: true)
         property name: 'document', type: 'com.orientechnologies.orient.core.record.impl.ODocument'
         // find OrientDBODocumentDelegate
         def scope = com.intellij.psi.search.GlobalSearchScope.allScope(project);
         def clazz = com.intellij.psi.JavaPsiFacade.getInstance(project).findClass('com.orientechnologies.orient.core.record.impl.ODocument', scope);
         delegatesTo(clazz)
     }
-}
+    if (classType?.hasAnnotation('com.groovy.orient.graph.Vertex')) {
+        property(name: 'vertex', type: 'com.tinkerpop.blueprints.impls.orient.OrientVertex')
+        def mapping = classType.fields.find { it.name == 'mapping' }
+        Map<String, Map<String, String>> addMethods = [:]
+        if (mapping) {
+            try {
+                def statement = new AstBuilder().buildFromString(CompilePhase.CONVERSION, false, mapping.text)[0] as BlockStatement
+                statement.statements.each {
+                    def expr = it as ExpressionStatement
+                    addMethods = getMethodNames(expr.expression as BinaryExpression)
+                }
+            } catch (Exception e) {
 
-
-private injectDocumentMethods() {
-    AstBuilder
-}
-
-/*private List getMethodNames(BinaryExpression expression) {
-    def methodNames = []
-    def closure = expression.rightExpression as ClosureExpression
-    def closureStatement = closure.code as BlockStatement
-    closureStatement.statements.each {
-        if (it instanceof ExpressionStatement) {
-            def expr = it as ExpressionStatement
-            def methodCall = expr.expression as MethodCallExpression
-            methodNames << methodCall.methodAsString
-        } else if (it instanceof ReturnStatement) {
-            if (it.expression instanceof MethodCallExpression) {
-                methodNames << it.expression.methodAsString
             }
         }
+        classType.fields.each {
+            def methodName = addMethods.get(it.name)
+            if (methodName) {
+                def param = it.type.toString()[8..-1]
+                if (param.contains('List')) {
+                    def pattern = param =~ /List<(.*?)\>/
+                    param = pattern[0][1]
+                }
+                method name: methodName.name, type: methodName.type, params: [param: param]
+            }
+        }
+        def scope = com.intellij.psi.search.GlobalSearchScope.allScope(project);
+        def clazz = com.intellij.psi.JavaPsiFacade.getInstance(project).findClass('com.tinkerpop.blueprints.impls.orient.OrientVertex', scope);
+        delegatesTo(clazz)
     }
+    if (classType?.hasAnnotation('com.groovy.orient.graph.Edge')) {
+        def annotation = classType.modifierList.annotations[0]
+        def from = annotation.findAttributeValue('from')
+        def to = annotation.findAttributeValue('to')
+        method(name: 'getIn', type: from.text, params: [:])
+        method(name: 'getOut', type: to.text, params: [:])
+        property(name: 'edge', type: 'com.tinkerpop.blueprints.impls.orient.OrientEdge')
+        def scope = com.intellij.psi.search.GlobalSearchScope.allScope(project);
+        def clazz = com.intellij.psi.JavaPsiFacade.getInstance(project).findClass('com.tinkerpop.blueprints.impls.orient.OrientEdge', scope);
+        delegatesTo(clazz)
+    }
+}
+
+
+private Map<String, Map<String, String>> getMethodNames(BinaryExpression expression) {
+    def methodNames = [:]
+    try {
+        def closure = expression.rightExpression as ClosureExpression
+        def closureStatement = closure.code as BlockStatement
+        closureStatement.statements.each {
+            def expr = it as ExpressionStatement
+            if (expr.expression instanceof MethodCallExpression) {
+                def method = expr.expression as MethodCallExpression
+                def arguments = method.arguments as TupleExpression
+                def namedArgs = arguments.expressions.first() as NamedArgumentListExpression
+                def mapArg = namedArgs.mapEntryExpressions.each {
+                    if ((it.keyExpression as ConstantExpression).value == 'edge') {
+                        methodNames[method.methodAsString] = [name: "addTo${method.methodAsString.capitalize()}", type: it.valueExpression.text]
+                    }
+                }
+            }
+        }
+    } catch (Exception e) {
+
+    }
+
     return methodNames
-}*/
+}
+

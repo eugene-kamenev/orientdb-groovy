@@ -6,13 +6,12 @@ import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
-
 /**
  * @author @eugenekamenev
  */
 @Target([ElementType.TYPE])
 @Retention(RetentionPolicy.SOURCE)
-@GroovyASTTransformationClass(['grails.graph.ferma.VertexTransformation'])
+@GroovyASTTransformationClass(['com.groovy.orient.graph.VertexTransformation'])
 @interface Vertex {
-
+    String value() default ''
 }

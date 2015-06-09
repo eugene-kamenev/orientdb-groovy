@@ -1,5 +1,5 @@
-package com.groovy.orient.document.orient
-import com.groovy.orient.document.OrientDocument
+package com.groovy.orient.document
+
 import com.orientechnologies.orient.core.metadata.schema.OType
 import groovy.transform.CompileStatic
 
