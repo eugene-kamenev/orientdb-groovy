@@ -13,7 +13,7 @@ import java.lang.annotation.Target
 @Retention(RetentionPolicy.SOURCE)
 @GroovyASTTransformationClass(['com.groovy.orient.graph.EdgeTransformation'])
 @interface Edge {
-    Class from() // Direction out
-    Class to() // Direction in
+    Class from() // Direction in
+    Class to() // Direction out
     String value() default '' // orient name
 }

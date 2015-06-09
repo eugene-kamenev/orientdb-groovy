@@ -3,6 +3,7 @@
 In this project I am trying to provide Groovy way to work with orientdb as simple as possible.
 This project contains Groovy AST Transformations trying to mimic grails-entity style.
 All useful information you can find in Spock tests dir.
+For now Document API and Graph API with gremlin are supported.
 
 And here is an example how I will use it with Spring Boot transactions
 https://github.com/eugene-kamenev/orientdb-spring-boot-example
@@ -12,7 +13,69 @@ I know about OrientDB object-api, but anyway I started to create this one.
 ###IDE Support
 This lib contains *.gdsl script for IntelliJ IDEA, it will work even in Community Edition, so you will feel very nice code completion. No red 'missing' methods!
 
-##Example usage
+##Graph example
+```groovy
+@Vertex
+@CompileStatic
+class City {
+    String title
+    List<Person> visitedPersons
+    List<Person> citizens
+
+    static mapping = {
+        visitedPersons(edge: Visited)
+        citizens(edge: Lives)
+    }
+}
+
+@Vertex
+@CompileStatic
+class Person {
+    String firstName
+    String lastName
+    City livesIn
+    List<City> visitedCities
+
+    static mapping = {
+        livesIn(edge: Lives)
+        visitedCities(edge: Visited)
+    }
+}
+
+@Edge(from = Person, to = City)
+@CompileStatic
+class Visited {
+    Date visitDate
+}
+
+@Edge(from = Person, to = City)
+@CompileStatic
+class Lives {
+    Date since
+}
+```
+##Graph creation
+When you define property as connected by edge, orientdb-groovy will generate special methods for adding edges.
+```groovy
+def first = new Person(firstName: 'First Name')
+def second = new Person(firstName: 'First Name 2')
+def newYork = new City(title: 'New York')
+def amsterdam = new City(title: 'Amsterdam')
+def visited = first.addToVisitedCities(newYork)
+visited.visitDate = new Date()
+def lives = first.addToLivesIn(amsterdam)
+lives.since = new Date()
+amsterdam.addToCitizens(second)
+amsterdam.addToVisitedPersons(second)
+db.commit()
+```
+##Gremlin graph queries
+Gremlin pipes are supported.
+```groovy
+def count = newYork.vertex.pipe().out('Visited').count()
+def persons = newYork.vertex.pipe().out('Visited').has('firstName', 'First Name').toList()
+```
+##Document example
 ```groovy
 @OrientDocument
 @CompileStatic // yes it is fully supported
@@ -87,7 +150,7 @@ class Country {
     person.save()
 ```
 
-###Quering
+###Document Quering
 ```groovy
     def personList = Person.executeQuery('select from Person where firstName=?', 'Bart')
     def personList2 = User.executeQuery('select from User where firstName=:a and lastName like :b', [a: 'Bart', b: '%Simpson%'])
