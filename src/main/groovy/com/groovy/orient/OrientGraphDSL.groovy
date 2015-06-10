@@ -25,6 +25,10 @@ class OrientGraphDSL {
         (T) clazz.newInstance(target.addEdge("${clazz.simpleName}", (Vertex)to))
     }
 
+    static <T> List<T> toList(GremlinPipeline pipeline, Class<T> clazz) {
+        transformToVertexList(clazz, pipeline.toList())
+    }
+
     static <T> List<T> transformToVertexList(Class<T> vertexClass, List object) {
         return object.collect { Object o ->
             transformToVertex(vertexClass, o)

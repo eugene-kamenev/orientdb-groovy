@@ -6,13 +6,13 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class City {
     String title
-    String title2
+    Date dateCreated
 
     List<Person> visitedPersons
     List<Person> citizens
 
     static mapping = {
-        title(field: 'city_title')
+        dateCreated(field: 'date_created')
         visitedPersons(edge: Visited)
         citizens(edge: Lives)
     }
