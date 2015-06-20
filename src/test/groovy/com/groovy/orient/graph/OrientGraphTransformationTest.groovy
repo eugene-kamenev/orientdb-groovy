@@ -43,6 +43,10 @@ class OrientGraphTransformationTest extends Specification {
         def edge4 = newYork.addToVisitedPersons(second)
         def edge5 = first.addToLivesIn(amsterdam)
         def edge6 = first.addToLivesIn(newYork)
+        and: 'create relations using links'
+        first.setCityLink(amsterdam)
+        first.setCityLinkedList([newYork, amsterdam])
+        first.setCityLinkedSet([amsterdam, newYork] as HashSet)
         and: 'commit changes'
         orient.commit()
         and: 'test extension get method'
@@ -69,6 +73,11 @@ class OrientGraphTransformationTest extends Specification {
         newYork.visitedPersons.size() == 2
         second.visitedCities.size() == 2
         amsterdam.visitedPersons.size() == 2
+        and: 'check realtions using links'
+        first.cityLink.id == amsterdam.id
+        first.cityLinkedList.size() == 2
+        first.cityLinkedSet.size() == 2
+        first.cityLinkedList[0].id == newYork.id
         and: 'check gremlin queries'
         first.vertex.pipe().in('Visited').has('title', 'New York').count() == 1
         second.vertex.pipe().in('Visited').has('title', 'New York').count() == 1
@@ -77,5 +86,6 @@ class OrientGraphTransformationTest extends Specification {
         and: 'check gremlin pipe extension method toList implementation'
         first.vertex.pipe().in('Visited').has('title', 'New York').toList(City).size() == 1
         amsterdam.vertex.pipe().out('Visited').toList(Person).size() == 2
+
     }
 }

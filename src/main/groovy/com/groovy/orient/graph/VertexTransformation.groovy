@@ -1,9 +1,8 @@
 package com.groovy.orient.graph
 
-import com.groovy.orient.OrientGraphDSL
-import com.groovy.orient.document.util.ASTUtil
+import com.groovy.orient.ast.ASTUtil
 import com.orientechnologies.orient.core.db.record.OIdentifiable
-import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
+import com.orientechnologies.orient.core.metadata.schema.OType
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
 import com.tinkerpop.blueprints.impls.orient.OrientVertex
 import groovy.transform.CompileStatic
@@ -19,15 +18,17 @@ import org.codehaus.groovy.transform.DelegateASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
 /**
  * @author @eugenekamenev
  */
 @CompileStatic
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 class VertexTransformation extends AbstractASTTransformation {
-    static final ClassNode orientBaseGraphNode = ClassHelper.make(OrientBaseGraph).plainNodeReference
-    static final ClassNode orientGraphDSLNode = ClassHelper.make(OrientGraphDSL).plainNodeReference
+
+    static final ClassNode otype = ClassHelper.make(OType).plainNodeReference
+    static final ClassNode listNode = ClassHelper.make(List).plainNodeReference
+    static final ClassNode setNode = ClassHelper.make(LinkedHashSet).plainNodeReference
+    static final ClassNode orientGraphHelperNode = ClassHelper.make(OrientGraphHelper).plainNodeReference
     static final ClassNode delegateNode = ClassHelper.make(Delegate).plainNodeReference
     static final ClassNode orientVertexNode = ClassHelper.make(OrientVertex).plainNodeReference
     static final ClassNode orientGraphNode = ClassHelper.make(OrientGraph).plainNodeReference
@@ -79,8 +80,8 @@ class VertexTransformation extends AbstractASTTransformation {
     private static void createConstructors(ClassNode classNode, String orientCluster, FieldNode thisVertex) {
         def recordIdParams = params(param(oIdentifiableNode, 'oIdentifiable'))
         def vertexParams = params(param(orientVertexNode, 'vertex1'))
-        def initStatementRecordId = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'getVertex', varX(recordIdParams[0]))))
-        def initStatement = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'addVertex', constX('class:' + orientCluster))))
+        def initStatementRecordId = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'getTemporaryVertex', varX(recordIdParams[0]))))
+        def initStatement = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'addTemporaryVertex', constX(orientCluster))))
         def emptyConstructor = new ConstructorNode(ACC_PUBLIC, initStatement)
         def initStatementDocument = stmt(assignX(varX(thisVertex), varX(vertexParams[0])))
         def documentConstructor = new ConstructorNode(ACC_PUBLIC, vertexParams, [] as ClassNode[], initStatementDocument)
@@ -115,30 +116,46 @@ class VertexTransformation extends AbstractASTTransformation {
         Statement getterStatement
         def propertyName = mapping?.field ?: field.name
         def thisVertex = clazzNode.fields.find { it.name == 'vertex' }
+        def type = mapping?.type as PropertyExpression
         if (mapping?.edge) {
             def experssion = mapping.edge as ClassExpression
             def edgeClass = experssion.type.plainNodeReference
             def edgeNodeAnnotation = edgeClass.getAnnotations(edgeAnnotationNode)[0]
             def inNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.from))
             def outNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.to))
-            getterStatement = generateEdgeGetter(clazzNode, edgeClass, inNode, outNode, field)
+            def edgeName = (String) ASTUtil.annotationValue(edgeNodeAnnotation.members.name) ?: edgeClass.nameWithoutPackage
+            getterStatement = generateEdgeGetter(clazzNode, edgeClass, inNode, outNode, field, edgeName)
         } else {
-            getterStatement = returnS(castX(field.type, callX(varX(thisVertex), 'getProperty', constX(propertyName))))
+            if (type) {
+                def resultBlock = new BlockStatement()
+                if (type.text.endsWith('LINK') || type.text.endsWith('EMBEDDED')) {
+                    resultBlock.addStatement(returnS(ctorX(field.type, args(castX(orientVertexNode, callX(varX(thisVertex), 'getProperty', args(constX(propertyName))))))))
+                }
+                if (type.text.endsWith('LINKLIST') || type.text.endsWith('LINKSET')) {
+                    def genericNode = field.type.genericsTypes[0].type.plainNodeReference
+                    def getter = callX(varX(thisVertex), 'getProperty', args(constX(propertyName)))
+                    resultBlock.addStatement(returnS(callX(orientGraphHelperNode, 'transformVertexCollectionToEntity', args(getter, type, classX(genericNode)))))
+                }
+                getterStatement = resultBlock
+            } else {
+                getterStatement = returnS(castX(field.type, callX(varX(thisVertex), 'getProperty', constX(propertyName))))
+            }
         }
         def method = new MethodNode("get${field.name.capitalize()}", ACC_PUBLIC, field.type, [] as Parameter[], [] as ClassNode[], getterStatement)
         clazzNode.addMethod(method)
     }
 
-    private Statement generateEdgeGetter(ClassNode currentClass, ClassNode edgeClass, ClassNode inNode, ClassNode outNode, FieldNode fieldNode) {
+    private Statement generateEdgeGetter(ClassNode currentClass, ClassNode edgeClass, ClassNode inNode, ClassNode outNode, FieldNode fieldNode, String edgeName) {
         def isCollection = fieldNode.type.plainNodeReference in collectionNodes
-        def methodName = isCollection ? 'transformToVertexList' : 'transformToVertex'
+        def methodName = isCollection ? 'transformVertexCollectionToEntity' : 'transformVertexToEntity'
         def pipeResultMethodName = isCollection ? 'toList' : 'next'
         def direction = inNode == currentClass ? 'in' : 'out'
         def currentNode = inNode == currentClass ? outNode : inNode
         def thisVertex = varX(currentClass.fields.find { it.name == 'vertex' })
-        def callThisExpression = callX(callX(orientGraphDSLNode, 'pipe', args(thisVertex)), direction, args(constX(edgeClass.nameWithoutPackage)))
-        def expression = callX(orientGraphDSLNode, methodName, args(classX(currentNode), callX(callThisExpression, pipeResultMethodName)))
-        return returnS(castX(fieldNode.type, expression))
+        def callThisExpression = callX(callX(orientGraphHelperNode, 'pipe', args(thisVertex)), direction, args(constX(edgeName)))
+        def arguments = args(classX(currentNode), callX(callThisExpression, pipeResultMethodName))
+        def expression = callX(orientGraphHelperNode, methodName, arguments)
+        return returnS(expression)
     }
 
     private void createPropertySetter(ClassNode clazzNode, FieldNode field, Map mapping) {
@@ -148,6 +165,7 @@ class VertexTransformation extends AbstractASTTransformation {
         def setterVar = varX(setterParam)
         Parameter[] methodParams = params(setterParam)
         def propertyName = mapping?.field ?: field.name
+        def otype = mapping?.type as PropertyExpression
         ClassNode returnType = ClassHelper.VOID_TYPE
         def thisVertex = varX(clazzNode.fields.find { it.name == 'vertex' })
         if (mapping?.edge) {
@@ -163,20 +181,28 @@ class VertexTransformation extends AbstractASTTransformation {
             def outNode = (ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.to)
             methodName = "addTo${field.name.capitalize()}"
             if (outNode == clazzNode) {
-                setterStatement = returnS(castX(returnType, callX(orientGraphDSLNode, 'createEdge', args(thisVertex, propX(setterVar, 'vertex'), edgeClassExpr))))
+                setterStatement = returnS(castX(returnType, callX(orientGraphHelperNode, 'createEdge', args(thisVertex, propX(setterVar, 'vertex'), edgeClassExpr))))
             }
             if (inNode == clazzNode) {
-                setterStatement = returnS(castX(returnType, callX(orientGraphDSLNode, 'createEdge', args(propX(setterVar, 'vertex'), thisVertex, edgeClassExpr))))
+                setterStatement = returnS(castX(returnType, callX(orientGraphHelperNode, 'createEdge', args(propX(setterVar, 'vertex'), thisVertex, edgeClassExpr))))
             }
         } else {
-        /* here we should catch mapping types like OType.LINK and others
-                    if (mapping.type) {
-
-                    }
-               */
             methodName = "set${field.name.capitalize()}"
             methodParams = params(setterParam)
-            setterStatement = stmt(callX(varX(thisVertex), 'setProperty', args(constX(propertyName), setterVar)))
+            def arguments = args(constX(propertyName), setterVar)
+            if (otype) {
+                if (otype.text.endsWith('LINK') || otype.text.endsWith('EMBEDDED')) {
+                    arguments = args(constX(propertyName), propX(varX(setterVar), 'vertex'))
+                }
+                if (otype.text.endsWith('LINKLIST')) {
+                    arguments = args(constX(propertyName), callX(orientGraphHelperNode, 'transformEntityCollectionToVertex', args(setterVar)))
+                }
+                if (otype.text.endsWith('LINKSET')) {
+                    arguments = args(constX(propertyName), ctorX(setNode, args(callX(orientGraphHelperNode, 'transformEntityCollectionToVertex', args(setterVar)))))
+                }
+                arguments.addExpression(otype)
+            }
+            setterStatement = stmt(callX(varX(thisVertex), 'setProperty', arguments))
         }
         def method = new MethodNode(methodName, ACC_PUBLIC, returnType, methodParams, [] as ClassNode[], setterStatement)
         clazzNode.addMethod(method)

@@ -24,6 +24,7 @@ class OrientDocumentTransformationsTest extends Specification {
 
     def cleanup() {
         db.close()
+        factory.close()
     }
 
     def 'test that transformation applied right'() {

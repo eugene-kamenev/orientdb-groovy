@@ -15,5 +15,5 @@ import java.lang.annotation.Target
 @interface Edge {
     Class from() // Direction in
     Class to() // Direction out
-    String value() default '' // orient name
+    String name() default '' // orient name
 }

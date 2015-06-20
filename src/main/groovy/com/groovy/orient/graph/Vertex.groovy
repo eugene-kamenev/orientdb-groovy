@@ -13,5 +13,5 @@ import java.lang.annotation.Target
 @Retention(RetentionPolicy.SOURCE)
 @GroovyASTTransformationClass(['com.groovy.orient.graph.VertexTransformation'])
 @interface Vertex {
-    String value() default ''
+    String value() default '' // vertex class name in OrientDB
 }

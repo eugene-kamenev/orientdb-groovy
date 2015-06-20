@@ -1,5 +1,5 @@
 package com.groovy.orient.graph
-import com.groovy.orient.document.util.ASTUtil
+import com.groovy.orient.ast.ASTUtil
 import com.tinkerpop.blueprints.Direction
 import com.tinkerpop.blueprints.impls.orient.OrientEdge
 import groovy.transform.CompileStatic
