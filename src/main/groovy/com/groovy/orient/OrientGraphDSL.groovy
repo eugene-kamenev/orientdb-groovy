@@ -30,7 +30,7 @@ class OrientGraphDSL {
         OrientGraphHelper.toList(pipeline, clazz)
     }
 
-    static <T> T graphQuery(Class clazz, String query, boolean singleResult = false, ... params) {
+    static <T> T graphQuery(Class<T> clazz, String query, boolean singleResult = false, ...params) {
         OrientGraphHelper.executeQuery(clazz, query, singleResult, params)
     }
 }

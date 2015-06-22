@@ -1,5 +1,4 @@
 package com.groovy.orient.graph
-
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
@@ -11,7 +10,6 @@ import groovy.transform.TypeCheckingMode
 
 @CompileStatic
 class OrientGraphHelper {
-
     static <T> T 'new'(OrientGraph orientGraph, Class<T> clazz, ... properties) {
         clazz.newInstance(orientGraph.addTemporaryVertex("$clazz.simpleName", properties))
     }
