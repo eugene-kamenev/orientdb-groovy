@@ -1,6 +1,7 @@
 package com.groovy.orient.document
 
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
+import com.orientechnologies.orient.core.sql.OCommandSQL
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Stepwise
@@ -114,6 +115,8 @@ class OrientDocumentTransformationsTest extends Specification {
 
     def 'test formula feature'() {
         given: 'create City and Person entities'
+          OCommandSQL sql = new OCommandSQL('DELETE FROM City')
+          db.command(sql).execute()
           def city = new City(title: 'Las Vegas')
           def person = new Person()
         when: 'persist into database'

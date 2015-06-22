@@ -18,6 +18,7 @@ import org.codehaus.groovy.transform.DelegateASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+
 /**
  * @author @eugenekamenev
  */
@@ -83,7 +84,7 @@ class VertexTransformation extends AbstractASTTransformation {
         def initStatementRecordId = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'getTemporaryVertex', varX(recordIdParams[0]))))
         def initStatement = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'addTemporaryVertex', constX(orientCluster))))
         def emptyConstructor = new ConstructorNode(ACC_PUBLIC, initStatement)
-        def initStatementDocument = stmt(assignX(varX(thisVertex), varX(vertexParams[0])))
+        def initStatementDocument = ifElseS(notNullX(varX(vertexParams[0])), stmt(assignX(varX(thisVertex), varX(vertexParams[0]))), initStatement)
         def documentConstructor = new ConstructorNode(ACC_PUBLIC, vertexParams, [] as ClassNode[], initStatementDocument)
         def recordConnstructorNode = new ConstructorNode(ACC_PUBLIC, recordIdParams, [] as ClassNode[], initStatementRecordId)
         classNode.addConstructor(emptyConstructor)
@@ -105,6 +106,9 @@ class VertexTransformation extends AbstractASTTransformation {
                 case 'type':
                     map[name][key] = arg.valueExpression
                     break;
+                case 'params':
+                    map[name][key] = arg.valueExpression
+                    break;
                 default:
                     map[name][key] = arg.valueExpression.text
                     break;
@@ -117,28 +121,42 @@ class VertexTransformation extends AbstractASTTransformation {
         def propertyName = mapping?.field ?: field.name
         def thisVertex = clazzNode.fields.find { it.name == 'vertex' }
         def type = mapping?.type as PropertyExpression
-        if (mapping?.edge) {
-            def experssion = mapping.edge as ClassExpression
-            def edgeClass = experssion.type.plainNodeReference
-            def edgeNodeAnnotation = edgeClass.getAnnotations(edgeAnnotationNode)[0]
-            def inNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.from))
-            def outNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.to))
-            def edgeName = (String) ASTUtil.annotationValue(edgeNodeAnnotation.members.name) ?: edgeClass.nameWithoutPackage
-            getterStatement = generateEdgeGetter(clazzNode, edgeClass, inNode, outNode, field, edgeName)
-        } else {
-            if (type) {
-                def resultBlock = new BlockStatement()
-                if (type.text.endsWith('LINK') || type.text.endsWith('EMBEDDED')) {
-                    resultBlock.addStatement(returnS(ctorX(field.type, args(castX(orientVertexNode, callX(varX(thisVertex), 'getProperty', args(constX(propertyName))))))))
-                }
-                if (type.text.endsWith('LINKLIST') || type.text.endsWith('LINKSET')) {
-                    def genericNode = field.type.genericsTypes[0].type.plainNodeReference
-                    def getter = callX(varX(thisVertex), 'getProperty', args(constX(propertyName)))
-                    resultBlock.addStatement(returnS(callX(orientGraphHelperNode, 'transformVertexCollectionToEntity', args(getter, type, classX(genericNode)))))
-                }
-                getterStatement = resultBlock
+        if (mapping?.formula) {
+            def query = mapping.formula
+            ClassNode queryClassNode
+            def singleResult
+            if (field.type.plainNodeReference in collectionNodes) {
+                queryClassNode = field.type.genericsTypes[0].type.plainNodeReference
+                singleResult = false
             } else {
-                getterStatement = returnS(castX(field.type, callX(varX(thisVertex), 'getProperty', constX(propertyName))))
+                queryClassNode = field.type
+                singleResult = true
+            }
+            getterStatement = returnS(callX(orientGraphHelperNode, 'executeQuery', args(classX(queryClassNode), constX(query), constX(singleResult), mapping?.params as Expression)))
+        } else {
+            if (mapping?.edge) {
+                def experssion = mapping.edge as ClassExpression
+                def edgeClass = experssion.type.plainNodeReference
+                def edgeNodeAnnotation = edgeClass.getAnnotations(edgeAnnotationNode)[0]
+                def inNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.from))
+                def outNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.to))
+                def edgeName = (String) ASTUtil.annotationValue(edgeNodeAnnotation.members.name) ?: edgeClass.nameWithoutPackage
+                getterStatement = generateEdgeGetter(clazzNode, edgeClass, inNode, outNode, field, edgeName)
+            } else {
+                if (type) {
+                    def resultBlock = new BlockStatement()
+                    if (type.text.endsWith('LINK') || type.text.endsWith('EMBEDDED')) {
+                        resultBlock.addStatement(returnS(ctorX(field.type, args(castX(orientVertexNode, callX(varX(thisVertex), 'getProperty', args(constX(propertyName))))))))
+                    }
+                    if (type.text.endsWith('LINKLIST') || type.text.endsWith('LINKSET')) {
+                        def genericNode = field.type.genericsTypes[0].type.plainNodeReference
+                        def getter = callX(varX(thisVertex), 'getProperty', args(constX(propertyName)))
+                        resultBlock.addStatement(returnS(callX(orientGraphHelperNode, 'transformVertexCollectionToEntity', args(getter, type, classX(genericNode)))))
+                    }
+                    getterStatement = resultBlock
+                } else {
+                    getterStatement = returnS(castX(field.type, callX(varX(thisVertex), 'getProperty', constX(propertyName))))
+                }
             }
         }
         def method = new MethodNode("get${field.name.capitalize()}", ACC_PUBLIC, field.type, [] as Parameter[], [] as ClassNode[], getterStatement)

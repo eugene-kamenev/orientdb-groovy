@@ -83,6 +83,9 @@ class OrientGraphTransformationTest extends Specification {
         second.vertex.pipe().in('Visited').has('title', 'New York').count() == 1
         second.vertex.pipe().in('Visited').count() == 2
         amsterdam.vertex.pipe().out('Visited').count() == 2
+        and: 'check formula feature'
+        first.notVisitedCities.size() == 0
+        new Person().notVisitedCities.size() == 2
         and: 'check gremlin pipe extension method toList implementation'
         first.vertex.pipe().in('Visited').has('title', 'New York').toList(City).size() == 1
         amsterdam.vertex.pipe().out('Visited').toList(Person).size() == 2

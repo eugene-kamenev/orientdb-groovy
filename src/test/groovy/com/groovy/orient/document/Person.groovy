@@ -30,6 +30,6 @@ class Person {
 		profile(type: OType.EMBEDDED)
 		cities(type: OType.LINKLIST, fetch: 'eager')
 		citiesSet(type: OType.LINKSET)
-		cityFormula(formula: 'select from City where title=?', params: 'Las Vegas')
+		cityFormula(formula: 'select from City where @rid <> :id', params: [id: this.getId()])
 	}
 }

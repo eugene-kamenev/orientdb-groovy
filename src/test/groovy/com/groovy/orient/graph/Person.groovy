@@ -13,6 +13,7 @@ class Person {
     City cityLink
     List<City> cityLinkedList
     Set<City> cityLinkedSet
+    List<City> notVisitedCities
 
     static mapping = {
         livesIn(edge: Lives)
@@ -20,5 +21,6 @@ class Person {
         cityLink(type: OType.LINK)
         cityLinkedList(type: OType.LINKLIST)
         cityLinkedSet(type: OType.LINKSET)
+        notVisitedCities(formula: 'select from City where @rid not in (?)', params: this.getVisitedCities())
     }
 }

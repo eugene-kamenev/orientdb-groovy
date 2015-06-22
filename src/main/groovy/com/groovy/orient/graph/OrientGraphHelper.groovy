@@ -1,6 +1,8 @@
 package com.groovy.orient.graph
 
 import com.orientechnologies.orient.core.metadata.schema.OType
+import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
+import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
 import com.tinkerpop.blueprints.impls.orient.OrientVertex
 import com.tinkerpop.gremlin.java.GremlinPipeline
@@ -15,7 +17,10 @@ class OrientGraphHelper {
     }
 
     public static <T> T transformVertexToEntity(Class<T> entityClass, OrientVertex vertex) {
-        entityClass.newInstance(vertex)
+        if (vertex) {
+            return entityClass.newInstance(vertex)
+        }
+        return null
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
@@ -23,7 +28,8 @@ class OrientGraphHelper {
         (OrientVertex) object.vertex
     }
 
-    public static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Iterable<OrientVertex> collection, OType type, Class<T> entityClass) {
+    public
+    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Iterable<OrientVertex> collection, OType type, Class<T> entityClass) {
         def result = collection.collect {
             transformVertexToEntity(entityClass, (OrientVertex) it)
         }
@@ -35,7 +41,8 @@ class OrientGraphHelper {
         return result
     }
 
-    public static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Class<T> entityClass, Iterable<OrientVertex> collection) {
+    public
+    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Class<T> entityClass, Iterable<OrientVertex> collection) {
         transformVertexCollectionToEntity(collection, null, entityClass)
     }
 
@@ -54,12 +61,20 @@ class OrientGraphHelper {
     }
 
     static <T> List<T> toList(GremlinPipeline pipeline, Class<T> clazz) {
-        (List<T>)OrientGraphHelper.transformVertexCollectionToEntity((Iterable<OrientVertex>)pipeline.toList(), (OType)null, clazz)
+        (List<T>) OrientGraphHelper.transformVertexCollectionToEntity((Iterable<OrientVertex>) pipeline.toList(), (OType) null, clazz)
     }
 
-    static <T> T get(OrientGraph orientGraph, Class<T> clazz, id) {
+    static <T> T get(OrientBaseGraph orientGraph, Class<T> clazz, id) {
         (T) clazz.newInstance(orientGraph.getVertex(id))
     }
 
-
+    static <T> T executeQuery(Class<T> resultClass, String query, boolean singleResult, ... params) {
+        def sqlQuery = new OSQLSynchQuery<com.tinkerpop.blueprints.Vertex>(query)
+        def result = OrientGraph.activeGraph.command(sqlQuery).execute(params)
+        if (singleResult) {
+            return (T) transformVertexToEntity(resultClass, (OrientVertex) ((Iterable) result)[0])
+        } else {
+            return (T) transformVertexCollectionToEntity((Iterable) result, OType.LINKLIST, resultClass)
+        }
+    }
 }
