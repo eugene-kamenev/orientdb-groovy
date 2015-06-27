@@ -1,4 +1,5 @@
 package com.groovy.orient.graph
+
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
@@ -23,7 +24,7 @@ class OrientGraphHelper {
 
     @CompileStatic(TypeCheckingMode.SKIP)
     public static OrientVertex getVertexFromEntity(Class clazz, object) {
-        (OrientVertex) object.vertex
+        return (OrientVertex) object?.vertex
     }
 
     public
@@ -45,7 +46,7 @@ class OrientGraphHelper {
     }
 
     public static Collection<OrientVertex> transformEntityCollectionToVertex(Iterable collection) {
-        collection.collect {
+        collection?.collect {
             getVertexFromEntity(null, it)
         }
     }

@@ -34,6 +34,7 @@ class OrientGraphTransformationTest extends Specification {
         and: 'few entities'
         def first = new Person(firstName: 'Gomer', lastName: 'Simpson')
         def second = new Person(firstName: 'Bart', lastName: 'Simpson')
+        def cities = first.visitedCities?.isEmpty()
         def newYork = new City(title: 'New York')
         def amsterdam = new City(title: 'Amsterdam')
         when: 'create relations between entities'

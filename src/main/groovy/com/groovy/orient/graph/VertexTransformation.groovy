@@ -177,6 +177,9 @@ class VertexTransformation extends AbstractASTTransformation {
     }
 
     private void createPropertySetter(ClassNode clazzNode, FieldNode field, Map mapping) {
+        if (mapping?.formula) {
+            return
+        }
         String methodName
         Statement setterStatement
         def setterParam = param(field.type, field.name)
