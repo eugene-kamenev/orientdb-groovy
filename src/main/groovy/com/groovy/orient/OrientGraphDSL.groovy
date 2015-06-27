@@ -50,7 +50,6 @@ class OrientGraphDSL {
             orientGraph.commit()
             return result
         } catch (Exception e) {
-            log.error('EXCEPTION IN TRANSACTION', e)
             orientGraph.rollback()
             throw e
         } finally {

@@ -19,6 +19,5 @@ dependencies {
     compile 'com.orientechnologies:orientdb-core:2.1-rc4'
     compile 'com.orientechnologies:orientdb-client:2.1-rc4'
     compile 'com.orientechnologies:orientdb-graphdb:2.1-rc4'
-    compile 'org.slf4j:slf4j-simple:1.7.12'
     testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
 }
