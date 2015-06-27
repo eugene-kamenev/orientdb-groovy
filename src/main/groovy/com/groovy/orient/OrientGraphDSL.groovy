@@ -9,10 +9,8 @@ import com.tinkerpop.gremlin.java.GremlinPipeline
 import groovy.transform.CompileStatic
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.FromString
-import groovy.util.logging.Slf4j
 
 @CompileStatic
-@Slf4j
 class OrientGraphDSL {
 
     static <T> T 'new'(OrientGraph orientGraph, Class<T> clazz, ... properties) {
