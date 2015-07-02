@@ -8,7 +8,7 @@ For now Document API and Graph API with gremlin are supported.
 And here is an example how I will use it with Spring Boot transactions
 https://github.com/eugene-kamenev/orientdb-spring-boot-example
 
-I know about OrientDB object-api, but anyway I started to create this one.
+This library will transform your entity with direct vertex/edge properties/methods access, no proxies here.
 
 ###IDE Support
 This lib contains *.gdsl script for IntelliJ IDEA, it will work even in Community Edition, so you will feel very nice code completion. No red 'missing' methods!
