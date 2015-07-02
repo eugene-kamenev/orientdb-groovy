@@ -73,7 +73,7 @@ db.commit()
 Gremlin pipes are supported.
 ```groovy
 def count = newYork.vertex.pipe().out('Visited').count()
-def persons = newYork.vertex.pipe().out('Visited').has('firstName', 'First Name').toList()
+def persons = newYork.vertex.pipe().out('Visited').has('firstName', 'First Name').toList(Person)
 ```
 ##Document example
 ```groovy
