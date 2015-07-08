@@ -1,5 +1,4 @@
 package com.groovy.orient.graph
-
 import com.groovy.orient.ast.ASTUtil
 import com.orientechnologies.orient.core.db.record.OIdentifiable
 import com.orientechnologies.orient.core.metadata.schema.OType
@@ -18,7 +17,6 @@ import org.codehaus.groovy.transform.DelegateASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
 /**
  * @author @eugenekamenev
  */
@@ -81,7 +79,7 @@ class VertexTransformation extends AbstractASTTransformation {
     private static void createConstructors(ClassNode classNode, String orientCluster, FieldNode thisVertex) {
         def recordIdParams = params(param(oIdentifiableNode, 'oIdentifiable'))
         def vertexParams = params(param(orientVertexNode, 'vertex1'))
-        def initStatementRecordId = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'getTemporaryVertex', varX(recordIdParams[0]))))
+        def initStatementRecordId = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'getVertex', varX(recordIdParams[0]))))
         def initStatement = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'addTemporaryVertex', constX(orientCluster))))
         def emptyConstructor = new ConstructorNode(ACC_PUBLIC, initStatement)
         def initStatementDocument = ifElseS(notNullX(varX(vertexParams[0])), stmt(assignX(varX(thisVertex), varX(vertexParams[0]))), initStatement)
@@ -146,7 +144,7 @@ class VertexTransformation extends AbstractASTTransformation {
                 if (type) {
                     def resultBlock = new BlockStatement()
                     if (type.text.endsWith('LINK') || type.text.endsWith('EMBEDDED')) {
-                        resultBlock.addStatement(returnS(ctorX(field.type, args(castX(orientVertexNode, callX(varX(thisVertex), 'getProperty', args(constX(propertyName))))))))
+                        resultBlock.addStatement(returnS(ctorX(field.type, args(castX(oIdentifiableNode, callX(varX(thisVertex), 'getProperty', args(constX(propertyName))))))))
                     }
                     if (type.text.endsWith('LINKLIST') || type.text.endsWith('LINKSET')) {
                         def genericNode = field.type.genericsTypes[0].type.plainNodeReference
