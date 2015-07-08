@@ -3,9 +3,12 @@ import com.groovy.orient.graph.OrientGraphHelper
 import com.tinkerpop.blueprints.Vertex
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
+import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import com.tinkerpop.blueprints.impls.orient.OrientVertex
 import com.tinkerpop.gremlin.java.GremlinPipeline
 import groovy.transform.CompileStatic
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.FromString
 
 @CompileStatic
 class OrientGraphDSL {
@@ -32,5 +35,23 @@ class OrientGraphDSL {
 
     static <T> T graphQuery(Class<T> clazz, String query, boolean singleResult = false, ...params) {
         OrientGraphHelper.executeQuery(clazz, query, singleResult, params)
+    }
+
+    static <T> T withTransaction(OrientGraphFactory dbf, @ClosureParams(value = FromString, options = 'com.tinkerpop.blueprints.impls.orient.OrientGraph') Closure<T> closure) {
+        def orientGraph = (OrientGraph) OrientGraph.activeGraph
+        if (!orientGraph) {
+            orientGraph = dbf.tx
+        }
+        try {
+            orientGraph.begin()
+            def result = closure.call(orientGraph)
+            orientGraph.commit()
+            return result
+        } catch (Exception e) {
+            orientGraph.rollback()
+            throw e
+        } finally {
+            orientGraph.shutdown(false)
+        }
     }
 }
