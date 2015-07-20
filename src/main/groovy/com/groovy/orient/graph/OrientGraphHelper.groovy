@@ -1,5 +1,6 @@
 package com.groovy.orient.graph
 
+import com.orientechnologies.orient.core.db.record.OIdentifiable
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
@@ -11,11 +12,12 @@ import groovy.transform.TypeCheckingMode
 
 @CompileStatic
 class OrientGraphHelper {
+
     static <T> T 'new'(OrientGraph orientGraph, Class<T> clazz, ... properties) {
         clazz.newInstance(orientGraph.addTemporaryVertex("$clazz.simpleName", properties))
     }
 
-    public static <T> T transformVertexToEntity(Class<T> entityClass, OrientVertex vertex) {
+    public static <T> T transformVertexToEntity(Class<T> entityClass, OIdentifiable vertex) {
         if (vertex) {
             return entityClass.newInstance(vertex)
         }
@@ -60,7 +62,7 @@ class OrientGraphHelper {
     }
 
     static <T> List<T> toList(GremlinPipeline pipeline, Class<T> clazz) {
-        (List<T>) OrientGraphHelper.transformVertexCollectionToEntity((Iterable<OrientVertex>) pipeline.toList(), (OType) null, clazz)
+        (List<T>) transformVertexCollectionToEntity((Iterable<OrientVertex>) pipeline.toList(), (OType) null, clazz)
     }
 
     static <T> T get(OrientBaseGraph orientGraph, Class<T> clazz, id) {

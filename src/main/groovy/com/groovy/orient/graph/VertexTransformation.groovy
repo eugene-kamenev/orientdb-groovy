@@ -133,8 +133,8 @@ class VertexTransformation extends AbstractASTTransformation {
             getterStatement = returnS(callX(orientGraphHelperNode, 'executeQuery', args(classX(queryClassNode), constX(query), constX(singleResult), mapping?.params as Expression)))
         } else {
             if (mapping?.edge) {
-                def experssion = mapping.edge as ClassExpression
-                def edgeClass = experssion.type.plainNodeReference
+                def expression = mapping.edge as ClassExpression
+                def edgeClass = expression.type.plainNodeReference
                 def edgeNodeAnnotation = edgeClass.getAnnotations(edgeAnnotationNode)[0]
                 def inNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.from))
                 def outNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.to))
@@ -143,8 +143,8 @@ class VertexTransformation extends AbstractASTTransformation {
             } else {
                 if (type) {
                     def resultBlock = new BlockStatement()
-                    if (type.text.endsWith('LINK') || type.text.endsWith('EMBEDDED')) {
-                        resultBlock.addStatement(returnS(ctorX(field.type, args(castX(oIdentifiableNode, callX(varX(thisVertex), 'getProperty', args(constX(propertyName))))))))
+                    if (type.text.endsWith('LINK')) {
+                        resultBlock.addStatement(returnS(callX(orientGraphHelperNode, 'transformVertexToEntity', args(classX(field.type), castX(oIdentifiableNode, callX(varX(thisVertex), 'getProperty', args(constX(propertyName))))))))
                     }
                     if (type.text.endsWith('LINKLIST') || type.text.endsWith('LINKSET')) {
                         def genericNode = field.type.genericsTypes[0].type.plainNodeReference
