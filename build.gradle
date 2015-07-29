@@ -1,4 +1,4 @@
-group 'orientdb-groovy'
+group 'com.ek'
 version '0.1.0'
 
 apply plugin: 'groovy'

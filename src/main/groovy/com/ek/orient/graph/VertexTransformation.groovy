@@ -124,8 +124,8 @@ class VertexTransformation extends AbstractASTTransformation {
         def emptyConstructor = new ConstructorNode(ACC_PUBLIC, initStatement)
 
         // @todo commented because not sure about such kind behavior
-        // def initStatementDocument = ifElseS(notNullX(varX(vertexParams[0])), stmt(assignX(varX(thisVertex), varX(vertexParams[0]))), initStatement)
-        def documentConstructor = new ConstructorNode(ACC_PUBLIC, vertexParams, [] as ClassNode[], initStatement)
+        // def initStatementDocument = ifElseS(notNullX(varX(vertexParams[0])), , )), initStatement)
+        def documentConstructor = new ConstructorNode(ACC_PUBLIC, vertexParams, [] as ClassNode[], stmt(assignX(varX(thisVertex), varX(vertexParams[0]))))
         def recordConnstructorNode = new ConstructorNode(ACC_PUBLIC, recordIdParams, [] as ClassNode[], initStatementRecordId)
         classNode.addConstructor(emptyConstructor)
         classNode.addConstructor(documentConstructor)
@@ -253,7 +253,7 @@ class VertexTransformation extends AbstractASTTransformation {
      * @param mapping
      */
     private void createPropertySetter(ClassNode clazzNode, FieldNode field, Map mapping) {
-        if (mapping?.formula == null) {
+        if (mapping?.formula) {
             return
         }
         String methodName
