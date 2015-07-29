@@ -27,7 +27,9 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 @CompileStatic
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 class OrientDocumentTransformation extends AbstractASTTransformation {
-
+    /**
+     * ClassNodes for usage in transformation
+     */
     static final ClassNode document = ClassHelper.make(ODocument).plainNodeReference
     static final ClassNode recordIdNode = ClassHelper.make(ORecordId)
     static final ClassNode otype = ClassHelper.make(OType).plainNodeReference
@@ -37,14 +39,28 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
     static final ClassNode setNode = ClassHelper.make(LinkedHashSet).plainNodeReference
     static final List<ClassNode> collectionNodes = [listNode, setNode]
 
+    /**
+     * Transformation starts here, visiting the class node
+     * @since 0.1.0
+     *
+     * @param nodes
+     * @param source
+     */
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
+        // Edge annotation node
         AnnotationNode annotation = (AnnotationNode) nodes[0];
+        // Edge entity class node
         ClassNode annotatedClass = (ClassNode) nodes[1];
+        // get OrientDB class name
         String clusterName = ASTUtil.parseValue(annotation.members.value, annotatedClass.nameWithoutPackage)
+        // get defined transients
         List<String> transients = ASTUtil.parseValue(annotatedClass.getField('transients')?.initialExpression, []) as List<String>
+        // add document field into entity class
         def documentFieldNode = annotatedClass.addField('document', ACC_PUBLIC | ACC_FINAL, document, new EmptyExpression())
+        // create constructors for edge
         createConstructors(annotatedClass, clusterName, documentFieldNode)
+        // collect class properties for transformation, exclude document and transients
         def fields = annotatedClass.fields.findAll {
             if (it.name == 'document') {
                 def annotationNode = new AnnotationNode(delegateNode)
@@ -53,8 +69,11 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
             }
             !(it.name in transients) && !(it.static) && (it.modifiers != ACC_TRANSIENT) && (it.name != 'document')
         }
+        // get mapping closure from annotated class
         def mappingClosure = annotatedClass.getField('mapping')
+        // parse mapping closure expressions and get a map
         def mapping = createEntityMappingMap(annotatedClass, mappingClosure?.initialExpression as ClosureExpression)
+        // apply transformation on class properties
         fields.each {
             createPropertyGetter(annotatedClass, it, documentFieldNode, mapping[it.name])
             createPropertySetter(annotatedClass, it, documentFieldNode, mapping[it.name])
@@ -65,6 +84,14 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         ASTUtil.removeProperty(annotatedClass, 'transients')
     }
 
+    /**
+     * Create class constructors for entity
+     * @since 0.1.0
+     *
+     * @param classNode
+     * @param orientCluster
+     * @param thisDocument
+     */
     private void createConstructors(ClassNode classNode, String orientCluster, FieldNode thisDocument) {
         def recordIdParams = params(param(recordIdNode, 'recordId'))
         def documentParameters = params(param(document, 'document1'))
@@ -79,6 +106,14 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         classNode.addConstructor(recordConnstructorNode)
     }
 
+    /**
+     * Parse entity mapping closure from source and return entity mapping map
+     * @since 0.1.0
+     *
+     * @param classNode
+     * @param expression
+     * @return
+     */
     private static Map<String, Map> createEntityMappingMap(ClassNode classNode, ClosureExpression expression) {
         def mapping = [:]
         if (!expression) {
@@ -91,6 +126,15 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         mapping
     }
 
+    /**
+     * Modifies class constructor for eager fetch document links,
+     * if you want to use it outside opened transaction
+     * @since 0.1.0
+     *
+     * @param classNode
+     * @param eagerField
+     * @return
+     */
     private static modifyConstructorForEagerFetch(ClassNode classNode, String eagerField) {
         classNode.getDeclaredConstructors().each {
             def parameters = it.parameters
@@ -105,6 +149,14 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         }
     }
 
+    /**
+     * Parse single mapping closure expression
+     * @since 0.1.0
+     *
+     * @param classNode
+     * @param methodCallExpression
+     * @param map
+     */
     private
     static void parseMappingExpression(ClassNode classNode, MethodCallExpression methodCallExpression, Map<String, Map> map) {
         String name = ASTUtil.parseValue(methodCallExpression.method)
@@ -132,6 +184,15 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         }
     }
 
+    /**
+     * Create entity property getter method
+     * @since 0.1.0
+     *
+     * @param clazzNode
+     * @param field
+     * @param documentField
+     * @param map
+     */
     private static void createPropertyGetter(ClassNode clazzNode, FieldNode field, FieldNode documentField, Map map) {
         def fieldName = map?.field ?: field.name
         def otype = map?.type as PropertyExpression
@@ -170,6 +231,14 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
         clazzNode.addMethod(method)
     }
 
+    /**
+     * Create property setter method
+     *
+     * @param clazzNode
+     * @param field
+     * @param documentField
+     * @param map
+     */
     private static void createPropertySetter(ClassNode clazzNode, FieldNode field, FieldNode documentField, Map map) {
         if (!map?.formula) {
             def fieldName = map?.field ?: field.name
@@ -197,6 +266,4 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
             clazzNode.addMethod(method)
         }
     }
-
-
 }

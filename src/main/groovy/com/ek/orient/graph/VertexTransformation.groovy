@@ -17,14 +17,21 @@ import org.codehaus.groovy.transform.DelegateASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+
 /**
+ * Groovy AST Transformation for injecting vertex related features into entity class
+ * @see Vertex
+ * @see OrientGraphHelper
+ *
  * @author @eugenekamenev
  * @since 0.1.0
  */
 @CompileStatic
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 class VertexTransformation extends AbstractASTTransformation {
-
+    /**
+     * ClassNodes for usage in transformation
+     */
     static final ClassNode otype = ClassHelper.make(OType).plainNodeReference
     static final ClassNode listNode = ClassHelper.make(List).plainNodeReference
     static final ClassNode setNode = ClassHelper.make(LinkedHashSet).plainNodeReference
@@ -36,17 +43,32 @@ class VertexTransformation extends AbstractASTTransformation {
     static final ClassNode edgeAnnotationNode = ClassHelper.make(Edge).plainNodeReference
     static final List<ClassNode> collectionNodes = [ClassHelper.make(List).plainNodeReference]
 
+    /**
+     * Transformation starts here, visiting the class node
+     * @since 0.1.0
+     *
+     * @param nodes
+     * @param source
+     */
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
+        // Vertex annotation node
         AnnotationNode annotation = (AnnotationNode) nodes[0];
+        // current transformation class node
         ClassNode annotatedClass = (ClassNode) nodes[1];
+        // get transient fields from class to exclude them from transformation
         List<String> transients = ASTUtil.parseValue(annotatedClass.getField('transients')?.initialExpression, []) as List<String>
+        // get orientdb document class name
         String clusterName = ASTUtil.parseValue(annotation.members.value, annotatedClass.nameWithoutPackage)
+        // add vertex field into class
         def vertexFieldNode = annotatedClass.addField('vertex', ACC_PUBLIC | ACC_FINAL, orientVertexNode, new EmptyExpression())
-        def mappingClosure = annotatedClass.getField('mapping')
+        // create constructors
         createConstructors(annotatedClass, clusterName, vertexFieldNode)
+        // read mapping closure, parse and create entity mapping map
+        def mappingClosure = annotatedClass.getField('mapping')
         def mapping = [:]
         mapping = createEntityMappingMap(annotatedClass, mappingClosure?.initialExpression as ClosureExpression)
+        // collect entity properties for transformation, exclude transients and vertex field
         def fields = annotatedClass.fields.findAll {
             if (it.name == 'vertex') {
                 def annotationNode = new AnnotationNode(delegateNode)
@@ -55,6 +77,7 @@ class VertexTransformation extends AbstractASTTransformation {
             }
             !(it.name in transients) && !(it.static) && (it.modifiers != ACC_TRANSIENT) && (it.name != 'vertex')
         }
+        // apply property transformation
         fields.each {
             createPropertyGetter(annotatedClass, it, mapping[it.name] as Map)
             createPropertySetter(annotatedClass, it, mapping[it.name] as Map)
@@ -65,6 +88,13 @@ class VertexTransformation extends AbstractASTTransformation {
         ASTUtil.removeProperty(annotatedClass, 'transients')
     }
 
+    /**
+     * Parse entity mapping closure from source and return entity mapping map
+     *
+     * @param classNode
+     * @param expression
+     * @return
+     */
     private static Map<String, Map> createEntityMappingMap(ClassNode classNode, ClosureExpression expression) {
         def mapping = [:]
         if (!expression) {
@@ -77,6 +107,14 @@ class VertexTransformation extends AbstractASTTransformation {
         mapping
     }
 
+    /**
+     * Create entity constructors
+     * @since 0.1.0
+     *
+     * @param classNode
+     * @param orientCluster
+     * @param thisVertex
+     */
     private static void createConstructors(ClassNode classNode, String orientCluster, FieldNode thisVertex) {
         def recordIdParams = params(param(oIdentifiableNode, 'oIdentifiable'))
         def vertexParams = params(param(orientVertexNode, 'vertex1'))
@@ -91,6 +129,13 @@ class VertexTransformation extends AbstractASTTransformation {
         classNode.addConstructor(recordConnstructorNode)
     }
 
+    /**
+     * Parse single mapping closure expression
+     *
+     * @param classNode
+     * @param methodCallExpression
+     * @param map
+     */
     private
     static void parseMappingExpression(ClassNode classNode, MethodCallExpression methodCallExpression, Map<String, Map> map) {
         String name = ASTUtil.parseValue(methodCallExpression.method)
@@ -115,6 +160,14 @@ class VertexTransformation extends AbstractASTTransformation {
         }
     }
 
+    /**
+     * Create entity property getter method
+     * @since 0.1.0
+     *
+     * @param clazzNode
+     * @param field
+     * @param mapping
+     */
     private void createPropertyGetter(ClassNode clazzNode, FieldNode field, Map mapping) {
         Statement getterStatement
         def propertyName = mapping?.field ?: field.name
@@ -162,6 +215,18 @@ class VertexTransformation extends AbstractASTTransformation {
         clazzNode.addMethod(method)
     }
 
+    /**
+     * Create edge getter statement
+     * @since 0.1.0
+     *
+     * @param currentClass
+     * @param edgeClass
+     * @param inNode
+     * @param outNode
+     * @param fieldNode
+     * @param edgeName
+     * @return
+     */
     private Statement generateEdgeGetter(ClassNode currentClass, ClassNode edgeClass, ClassNode inNode, ClassNode outNode, FieldNode fieldNode, String edgeName) {
         def isCollection = fieldNode.type.plainNodeReference in collectionNodes
         def methodName = isCollection ? 'transformVertexCollectionToEntity' : 'transformVertexToEntity'
@@ -175,8 +240,16 @@ class VertexTransformation extends AbstractASTTransformation {
         return returnS(expression)
     }
 
+    /**
+     * Create entity setter property
+     * @since 0.1.0
+     *
+     * @param clazzNode
+     * @param field
+     * @param mapping
+     */
     private void createPropertySetter(ClassNode clazzNode, FieldNode field, Map mapping) {
-        if (mapping?.formula) {
+        if (mapping?.formula == null) {
             return
         }
         String methodName
@@ -226,20 +299,5 @@ class VertexTransformation extends AbstractASTTransformation {
         }
         def method = new MethodNode(methodName, ACC_PUBLIC, returnType, methodParams, [] as ClassNode[], setterStatement)
         clazzNode.addMethod(method)
-    }
-
-    private void removeProperty(ClassNode classNode, String propertyName) {
-        for (int i = 0; i < classNode.fields.size(); i++) {
-            if (classNode.fields[i].name == propertyName) {
-                classNode.fields.remove(i)
-                break
-            }
-        }
-        for (int i = 0; i < classNode.properties.size(); i++) {
-            if (classNode.properties[i].name == propertyName) {
-                classNode.properties.remove(i)
-                break
-            }
-        }
     }
 }
