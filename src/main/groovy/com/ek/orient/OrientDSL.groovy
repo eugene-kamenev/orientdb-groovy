@@ -9,6 +9,8 @@ import groovy.transform.TypeCheckingMode
 
 /**
  * OrientDB groovy extension methods for documents
+ * @since 0.1.0
+ *
  * @author @eugenekamenev
  */
 @CompileStatic
@@ -16,7 +18,9 @@ class OrientDSL {
 
     /**
      * Provides simple static query execution
-     *  Note that orient database should be already attached to thread
+     * Note that orient database connection
+     * should be already attached to thread
+     * @since 0.1.0
      *
      * @param query
      * @param params
@@ -30,6 +34,7 @@ class OrientDSL {
 
     /**
      * Get single document by @rid as entity instance
+     * @since 0.1.0
      *
      * @param clazz
      * @param rid
@@ -41,6 +46,7 @@ class OrientDSL {
 
     /**
      * Transform document into entity instance
+     * @since 0.1.0
      *
      * @param clazz
      * @param document
@@ -52,6 +58,7 @@ class OrientDSL {
 
     /**
      * Transforms collection of documents into collection of entities
+     * @since 0.1.0
      *
      * @param clazz
      * @param type
@@ -72,6 +79,7 @@ class OrientDSL {
 
     /**
      * Dynamic mehtod for getting document instance from entity
+     * @since 0.1.0
      *
      * @param object
      * @return
@@ -83,6 +91,7 @@ class OrientDSL {
 
     /**
      * Transforms collection of entities into collection of documents
+     * @since 0.1.0
      *
      * @param entities
      * @return

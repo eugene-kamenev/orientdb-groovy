@@ -90,6 +90,7 @@ class VertexTransformation extends AbstractASTTransformation {
 
     /**
      * Parse entity mapping closure from source and return entity mapping map
+     * @since 0.1.0
      *
      * @param classNode
      * @param expression
@@ -121,8 +122,10 @@ class VertexTransformation extends AbstractASTTransformation {
         def initStatementRecordId = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'getVertex', varX(recordIdParams[0]))))
         def initStatement = stmt(assignX(varX('vertex'), callX(callX(orientGraphNode, 'getActiveGraph'), 'addTemporaryVertex', constX(orientCluster))))
         def emptyConstructor = new ConstructorNode(ACC_PUBLIC, initStatement)
-        def initStatementDocument = ifElseS(notNullX(varX(vertexParams[0])), stmt(assignX(varX(thisVertex), varX(vertexParams[0]))), initStatement)
-        def documentConstructor = new ConstructorNode(ACC_PUBLIC, vertexParams, [] as ClassNode[], initStatementDocument)
+
+        // @todo commented because not sure about such kind behavior
+        // def initStatementDocument = ifElseS(notNullX(varX(vertexParams[0])), stmt(assignX(varX(thisVertex), varX(vertexParams[0]))), initStatement)
+        def documentConstructor = new ConstructorNode(ACC_PUBLIC, vertexParams, [] as ClassNode[], initStatement)
         def recordConnstructorNode = new ConstructorNode(ACC_PUBLIC, recordIdParams, [] as ClassNode[], initStatementRecordId)
         classNode.addConstructor(emptyConstructor)
         classNode.addConstructor(documentConstructor)
@@ -131,6 +134,7 @@ class VertexTransformation extends AbstractASTTransformation {
 
     /**
      * Parse single mapping closure expression
+     * @since 0.1.0
      *
      * @param classNode
      * @param methodCallExpression

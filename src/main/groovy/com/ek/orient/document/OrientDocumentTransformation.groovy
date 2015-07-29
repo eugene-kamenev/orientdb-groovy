@@ -233,6 +233,7 @@ class OrientDocumentTransformation extends AbstractASTTransformation {
 
     /**
      * Create property setter method
+     * @since 0.1.0
      *
      * @param clazzNode
      * @param field
