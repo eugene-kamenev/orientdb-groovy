@@ -1,23 +1,23 @@
-group 'grails-orientdb-tests'
-version '1.0'
+group 'orientdb-groovy'
+version '0.1.0'
 
 apply plugin: 'groovy'
 apply plugin: 'idea'
 
-sourceCompatibility = 1.6
+sourceCompatibility = 1.7
 
 repositories {
     jcenter()
     mavenCentral()
 }
 
-def groovy = '2.4.3'
+def groovy = '2.4.4'
 
 
 dependencies {
     compile "org.codehaus.groovy:groovy-all:${groovy}"
-    compile 'com.orientechnologies:orientdb-core:2.1-rc5'
-    compile 'com.orientechnologies:orientdb-client:2.1-rc5'
-    compile 'com.orientechnologies:orientdb-graphdb:2.1-rc5'
+    compile 'com.orientechnologies:orientdb-core:2.1-rc6'
+    compile 'com.orientechnologies:orientdb-client:2.1-rc6'
+    compile 'com.orientechnologies:orientdb-graphdb:2.1-rc6'
     testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
 }

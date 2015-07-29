@@ -1,7 +1,7 @@
-package com.groovy.orient.document
+package com.ek.orient.document
 
-import com.groovy.orient.OrientDSL
-import com.groovy.orient.ast.ASTUtil
+import com.ek.orient.OrientDSL
+import com.ek.orient.ast.ASTUtil
 import com.orientechnologies.orient.core.id.ORecordId
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument

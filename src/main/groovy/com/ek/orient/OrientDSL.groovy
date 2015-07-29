@@ -1,4 +1,4 @@
-package com.groovy.orient
+package com.ek.orient
 
 import com.orientechnologies.orient.core.id.ORecordId
 import com.orientechnologies.orient.core.metadata.schema.OType

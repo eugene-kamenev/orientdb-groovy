@@ -1,4 +1,4 @@
-package com.groovy.orient.document
+package com.ek.orient.document
 
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
 import com.orientechnologies.orient.core.sql.OCommandSQL

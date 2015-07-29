@@ -1,5 +1,5 @@
-package com.groovy.orient.graph
-import com.groovy.orient.ast.ASTUtil
+package com.ek.orient.graph
+import com.ek.orient.ast.ASTUtil
 import com.orientechnologies.orient.core.db.record.OIdentifiable
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.tinkerpop.blueprints.impls.orient.OrientGraph

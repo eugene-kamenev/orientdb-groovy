@@ -1,4 +1,4 @@
-package com.groovy.orient.document
+package com.ek.orient.document
 
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
@@ -15,7 +15,7 @@ import java.lang.annotation.Target
  */
 @Target([ElementType.TYPE])
 @Retention(RetentionPolicy.SOURCE)
-@GroovyASTTransformationClass(['com.groovy.orient.document.OrientDocumentTransformation'])
+@GroovyASTTransformationClass(['com.ek.orient.document.OrientDocumentTransformation'])
 @interface OrientDocument {
 
     /**

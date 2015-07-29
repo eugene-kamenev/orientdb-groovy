@@ -1,4 +1,4 @@
-package com.groovy.orient.graph
+package com.ek.orient.graph
 
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
@@ -15,7 +15,7 @@ import java.lang.annotation.Target
  */
 @Target([ElementType.TYPE])
 @Retention(RetentionPolicy.SOURCE)
-@GroovyASTTransformationClass(['com.groovy.orient.graph.EdgeTransformation'])
+@GroovyASTTransformationClass(['com.ek.orient.graph.EdgeTransformation'])
 @interface Edge {
     /**
      * OrientDB edge class name

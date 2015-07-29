@@ -1,5 +1,5 @@
-package com.groovy.orient
-import com.groovy.orient.graph.OrientGraphHelper
+package com.ek.orient
+import com.ek.orient.graph.OrientGraphHelper
 import com.tinkerpop.blueprints.Vertex
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
 import com.tinkerpop.blueprints.impls.orient.OrientGraph

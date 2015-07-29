@@ -1,4 +1,4 @@
-package com.groovy.orient.document
+package com.ek.orient.document
 
 import com.orientechnologies.orient.core.metadata.schema.OType
 import groovy.transform.CompileStatic
