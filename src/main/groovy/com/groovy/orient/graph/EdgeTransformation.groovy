@@ -17,7 +17,11 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
 /**
+ * OrientDB entity transformation for @see Edge annotation
+ *
  * @author @eugenekamenev
+ * @since 0.1.0
+ *
  */
 @CompileStatic
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)

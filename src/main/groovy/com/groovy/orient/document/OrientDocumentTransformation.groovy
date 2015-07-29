@@ -20,6 +20,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
 /**
  * Transformation for OrientDB document usage
+ * @since 0.1.0
  *
  * @author @eugenekamenev
  */

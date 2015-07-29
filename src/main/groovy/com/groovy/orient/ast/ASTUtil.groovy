@@ -10,13 +10,16 @@ import org.codehaus.groovy.ast.expr.VariableExpression
 
 /**
  * Simple, but useful AST Utils
+ *
  * @author @eugenekamenev
+ * @since 0.1.0
  */
 @CompileStatic
 class ASTUtil {
 
 	/**
 	 * Completely remove property from class
+	 * @since 0.1.0
 	 *
 	 * @param classNode
 	 * @param propertyName
@@ -38,6 +41,7 @@ class ASTUtil {
 
 	/**
 	 * Get annotation value
+	 * @since 0.1.0
 	 *
 	 * @param constant
 	 * @param defaultValue
@@ -56,11 +60,12 @@ class ASTUtil {
 		if (constant instanceof ConstantExpression) {
 			return (T) constant.value
 		}
-		return defaultValue
+		defaultValue
 	}
 
 	/**
-	 *  Parse value from expression
+	 * Parse value from expression
+	 * @since 0.1.0
 	 *
 	 * @param expression
 	 * @param defaultValue
@@ -82,5 +87,6 @@ class ASTUtil {
 		if (expression instanceof ConstantExpression) {
 			return (T) expression.value
 		}
+		defaultValue
 	}
 }

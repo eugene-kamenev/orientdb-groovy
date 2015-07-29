@@ -19,6 +19,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 /**
  * @author @eugenekamenev
+ * @since 0.1.0
  */
 @CompileStatic
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)

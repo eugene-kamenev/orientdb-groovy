@@ -9,13 +9,18 @@ import java.lang.annotation.Target
 
 /**
  * Annotation should be used to mark entity class
- * @param value can be used to choose different orientDB class name
  *
  * @author @eugenekamenev
+ * @since 0.1.0
  */
 @Target([ElementType.TYPE])
 @Retention(RetentionPolicy.SOURCE)
 @GroovyASTTransformationClass(['com.groovy.orient.document.OrientDocumentTransformation'])
 @interface OrientDocument {
+
+    /**
+     * Specifies OrientDB document class name
+     * @since 0.1.0
+     */
     String value() default ''
 }
