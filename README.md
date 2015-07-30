@@ -4,8 +4,20 @@
 In this project I am trying to provide Groovy way to work with orientdb as simple as possible.
 This project contains Groovy AST Transformations trying to mimic grails-entity style.
 All useful information you can find in Spock tests dir.
-For now Document API and Graph API with gremlin are supported.
+For now Document API and Graph API with gremlin are supported. Built with OrientDB 2.1.6-RC and Apache Groovy 2.4.4
 
+#Gradle config
+```groovy
+repositories {
+    maven {
+        url 'https://dl.bintray.com/eugene-kamenev/maven'
+    }
+}
+
+dependencies {
+    compile "com.github.eugene-kamenev:orientdb-groovy:0.1.0" 
+}
+```
 Example how to use it with Spring Boot
 https://github.com/eugene-kamenev/orientdb-spring-boot-example
 
