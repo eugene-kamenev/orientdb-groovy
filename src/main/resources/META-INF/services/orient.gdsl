@@ -59,7 +59,7 @@ contributor(context()) {
             def clazz = com.intellij.psi.JavaPsiFacade.getInstance(project).findClass('com.tinkerpop.blueprints.impls.orient.OrientVertex', scope);
             delegatesTo(clazz)
         }
-        if (classType?.hasAnnotation('Edge')) {
+        if (classType?.hasAnnotation('com.github.eugene.kamenev.orient.graph.Edge')) {
             def annotation = classType.modifierList.annotations[0]
             def from = annotation.findAttributeValue('from')
             def to = annotation.findAttributeValue('to')
