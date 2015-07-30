@@ -33,7 +33,7 @@ contributor(context()) {
             def clazz = com.intellij.psi.JavaPsiFacade.getInstance(project).findClass('com.orientechnologies.orient.core.record.impl.ODocument', scope);
             delegatesTo(clazz)
         }
-        if (classType?.hasAnnotation('Vertex')) {
+        if (classType?.hasAnnotation('com.github.eugene.kamenev.orient.document.Vertex')) {
             property(name: 'vertex', type: 'com.tinkerpop.blueprints.impls.orient.OrientVertex')
             def mapping = classType.fields.find { it.name == 'mapping' }
             Map<String, Map<String, String>> addMethods = [:]
