@@ -1,4 +1,4 @@
-package com.ek.orient.graph
+package com.github.eugene.kamenev.orient.graph
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.graph.gremlin.OGremlinHelper

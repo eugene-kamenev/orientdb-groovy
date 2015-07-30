@@ -1,7 +1,7 @@
-package com.ek.orient.document
+package com.github.eugene.kamenev.orient.document
 
-import com.ek.orient.OrientDSL
-import com.ek.orient.ast.ASTUtil
+import com.github.eugene.kamenev.orient.OrientDSL
+import com.github.eugene.kamenev.orient.ast.ASTUtil
 import com.orientechnologies.orient.core.id.ORecordId
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument

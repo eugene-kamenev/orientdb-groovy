@@ -4,19 +4,19 @@ import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.control.CompilePhase
 
-contributor(context(scope: annotatedScope(ctype: "com.ek.orient.document.OrientDocument"))) {
+contributor(context(scope: annotatedScope(ctype: "com.github.eugene.kamenev.orient.document.OrientDocument"))) {
     def s = String.name
     classType?.fields?.each {
         method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': s, type: s, formula: s]
     }
 }
-contributor(context(scope: annotatedScope(ctype: "com.ek.orient.graph.Vertex"))) {
+contributor(context(scope: annotatedScope(ctype: "com.github.eugene.kamenev.orient.graph.Vertex"))) {
     def s = String.name
     classType?.fields?.each {
         method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': s, type: s, formula: s]
     }
 }
-contributor(context(scope: annotatedScope(ctype: "com.ek.orient.graph.Edge"))) {
+contributor(context(scope: annotatedScope(ctype: "com.github.eugene.kamenev.orient.graph.Edge"))) {
     def s = String.name
     classType?.fields?.each {
         method name: it.name, type: 'void', params: ['map': Map.name], namedParams: ['field': s, type: s, formula: s]
@@ -25,7 +25,7 @@ contributor(context(scope: annotatedScope(ctype: "com.ek.orient.graph.Edge"))) {
 
 contributor(context()) {
     try {
-        if (classType?.hasAnnotation('com.ek.orient.document.OrientDocument')) {
+        if (classType?.hasAnnotation('com.github.eugene.kamenev.orient.document.OrientDocument')) {
             method(name: 'executeQuery', type: "List<$classType.name>", params: ['query': String.name, 'params': 'Object[]'], isStatic: true)
             property name: 'document', type: 'com.orientechnologies.orient.core.record.impl.ODocument'
             // find OrientDBODocumentDelegate
@@ -33,7 +33,7 @@ contributor(context()) {
             def clazz = com.intellij.psi.JavaPsiFacade.getInstance(project).findClass('com.orientechnologies.orient.core.record.impl.ODocument', scope);
             delegatesTo(clazz)
         }
-        if (classType?.hasAnnotation('com.ek.orient.graph.Vertex')) {
+        if (classType?.hasAnnotation('Vertex')) {
             property(name: 'vertex', type: 'com.tinkerpop.blueprints.impls.orient.OrientVertex')
             def mapping = classType.fields.find { it.name == 'mapping' }
             Map<String, Map<String, String>> addMethods = [:]
@@ -59,7 +59,7 @@ contributor(context()) {
             def clazz = com.intellij.psi.JavaPsiFacade.getInstance(project).findClass('com.tinkerpop.blueprints.impls.orient.OrientVertex', scope);
             delegatesTo(clazz)
         }
-        if (classType?.hasAnnotation('com.ek.orient.graph.Edge')) {
+        if (classType?.hasAnnotation('Edge')) {
             def annotation = classType.modifierList.annotations[0]
             def from = annotation.findAttributeValue('from')
             def to = annotation.findAttributeValue('to')

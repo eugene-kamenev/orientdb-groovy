@@ -1,3 +1,3 @@
 moduleName=orientdb-groovy
 moduleVersion=0.1.0
-extensionClasses=com.ek.orient.OrientDSL,com.ek.orient.OrientGraphDSL
+extensionClasses=com.github.eugene.kamenev.orient.OrientDSL,com.github.eugene.kamenev.orient.OrientGraphDSL

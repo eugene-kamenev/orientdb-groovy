@@ -1,4 +1,4 @@
-package com.ek.orient.graph
+package com.github.eugene.kamenev.orient.graph
 
 import groovy.transform.CompileStatic
 

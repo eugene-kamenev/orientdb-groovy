@@ -1,5 +1,6 @@
-package com.ek.orient
-import com.ek.orient.graph.OrientGraphHelper
+package com.github.eugene.kamenev.orient
+
+import com.github.eugene.kamenev.orient.graph.OrientGraphHelper
 import com.tinkerpop.blueprints.Vertex
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
 import com.tinkerpop.blueprints.impls.orient.OrientGraph

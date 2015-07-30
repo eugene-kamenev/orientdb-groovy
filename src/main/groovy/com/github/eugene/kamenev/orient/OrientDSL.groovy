@@ -1,4 +1,4 @@
-package com.ek.orient
+package com.github.eugene.kamenev.orient
 
 import com.orientechnologies.orient.core.id.ORecordId
 import com.orientechnologies.orient.core.metadata.schema.OType

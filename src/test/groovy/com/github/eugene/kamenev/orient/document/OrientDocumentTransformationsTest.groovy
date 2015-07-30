@@ -1,4 +1,4 @@
-package com.ek.orient.document
+package com.github.eugene.kamenev.orient.document
 
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
 import com.orientechnologies.orient.core.sql.OCommandSQL

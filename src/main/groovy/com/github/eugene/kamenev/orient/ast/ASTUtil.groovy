@@ -1,4 +1,4 @@
-package com.ek.orient.ast
+package com.github.eugene.kamenev.orient.ast
 
 import groovy.transform.CompileStatic
 import org.codehaus.groovy.ast.ClassNode

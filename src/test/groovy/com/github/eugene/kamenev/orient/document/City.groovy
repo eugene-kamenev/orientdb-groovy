@@ -1,4 +1,4 @@
-package com.ek.orient.document
+package com.github.eugene.kamenev.orient.document
 
 import groovy.transform.CompileStatic
 

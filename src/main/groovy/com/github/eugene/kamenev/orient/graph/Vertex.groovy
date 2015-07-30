@@ -1,4 +1,4 @@
-package com.ek.orient.document
+package com.github.eugene.kamenev.orient.graph
 
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
@@ -8,19 +8,18 @@ import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 
 /**
- * Annotation should be used to mark entity class
+ * Annotation for marking classes that will wrap OrientVertex
  *
  * @author @eugenekamenev
  * @since 0.1.0
  */
 @Target([ElementType.TYPE])
 @Retention(RetentionPolicy.SOURCE)
-@GroovyASTTransformationClass(['com.ek.orient.document.OrientDocumentTransformation'])
-@interface OrientDocument {
-
+@GroovyASTTransformationClass(['com.github.eugene.kamenev.orient.graph.VertexTransformation'])
+@interface Vertex {
     /**
-     * Specifies OrientDB document class name
-     * @since 0.1.0
+     * Vertex class name in OrientDB
+     * @return
      */
     String value() default ''
 }
