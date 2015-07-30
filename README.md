@@ -1,11 +1,12 @@
 # What can Groovy make for OrientDB?
+[ ![Download](https://api.bintray.com/packages/eugene-kamenev/maven/orientdb-groovy/images/download.svg) ](https://bintray.com/eugene-kamenev/maven/orientdb-groovy/_latestVersion)
 
 In this project I am trying to provide Groovy way to work with orientdb as simple as possible.
 This project contains Groovy AST Transformations trying to mimic grails-entity style.
 All useful information you can find in Spock tests dir.
 For now Document API and Graph API with gremlin are supported.
 
-And here is an example how I will use it with Spring Boot transactions
+Example how to use it with Spring Boot
 https://github.com/eugene-kamenev/orientdb-spring-boot-example
 
 This library will transform your entity with direct vertex/edge properties/methods access, no proxies here.
