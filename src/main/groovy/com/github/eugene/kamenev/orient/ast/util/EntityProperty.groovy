@@ -50,8 +50,6 @@ abstract class EntityProperty {
         ASTUtil.eachMethodArg(methodCall, closure)
     }
 
-
-
     /**
      * if property is mapped as collection
      *

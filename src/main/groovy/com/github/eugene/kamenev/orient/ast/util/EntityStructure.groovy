@@ -7,7 +7,8 @@ import org.codehaus.groovy.ast.FieldNode
 import org.objectweb.asm.Opcodes
 
 /**
- * This class can read needed information from entity class node and apply modifications on it
+ * This class can read needed information from entity class node and child classes should
+ * apply modifications from it
  *
  * @author @eugenekamenev
  * @since 0.1.1
@@ -75,14 +76,4 @@ abstract class EntityStructure<T extends EntityProperty> implements Opcodes {
      */
     abstract T mapProperty(FieldNode node)
 
-    /**
-     * Clean node from 'static mapping' and 'static transient' fields
-     */
-    def clean() {
-        ASTUtil.removeProperty(entity, 'mapping')
-        ASTUtil.removeProperty(entity, 'transients')
-        allFields.each {
-            ASTUtil.removeProperty(entity, it.name)
-        }
-    }
 }

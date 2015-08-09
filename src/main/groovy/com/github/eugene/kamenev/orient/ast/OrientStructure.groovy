@@ -111,9 +111,13 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         entity.addConstructor(new ConstructorNode(ACC_PUBLIC, selfType, [] as ClassNode[], selfTypeConstructor))
     }
 
+    /**
+     * Create entity getters task
+     *
+     * @return
+     */
     def createGetters() {
         entityProperties.each {k, orientProperty ->
-            println "processing getter for $k"
             def methodBody = new BlockStatement()
             def resultVar = varX('resultVar', orientProperty.nodeType)
             Expression assignExpression = null
@@ -146,6 +150,11 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         }
     }
 
+    /**
+     * Create entity setters task
+     *
+     * @return
+     */
     def createSetters() {
         def methodReturnType = ClassHelper.VOID_TYPE
         entityProperties.each {k, orientProperty ->
@@ -164,7 +173,6 @@ class OrientStructure extends EntityStructure<OrientProperty> {
 
     /**
      * Create edge getter expression
-     * @since 0.1.1
      *
      * @param currentClass
      * @param edgeClass
@@ -192,6 +200,11 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         callGraphHelper(methodName, arguments)
     }
 
+    /**
+     * Creates edge addTo* setter method
+     *
+     * @param property
+     */
     def createEdgeSetter(OrientProperty property) {
         Statement setterStatenent = null
         def edgeClass = property.mapping.edge as ClassExpression
@@ -210,6 +223,13 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         entity.addMethod(new MethodNode(methodName, ACC_PUBLIC, edgeClass.type.plainNodeReference, params(parameter), [] as ClassNode[], setterStatenent))
     }
 
+    /**
+     * Create setter expression for property
+     *
+     * @param orientProperty
+     * @param parameter
+     * @return
+     */
     Expression setToInjectedObject(OrientProperty orientProperty, Parameter parameter) {
         ArgumentListExpression arguments = args(constX(orientProperty.mapping.field), varX(parameter))
         def isTyped = orientProperty.link || orientProperty.linkedList || orientProperty.linkedSet || orientProperty.embedded
@@ -238,6 +258,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
 
     /**
      * Create getter expression
+     *
      * @param orientProperty
      * @return
      */
@@ -272,18 +293,46 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         null
     }
 
+    /**
+     * Create call expression on {@link OrientDocumentHelper}
+     *
+     * @param methodName
+     * @param args
+     * @return
+     */
     static Expression callDocHelper(String methodName, Expression args) {
         callX(DOC_HELPER, methodName, args)
     }
 
+    /**
+     * Create call expression on {@link OrientGraphHelper}
+     *
+     * @param methodName
+     * @param args
+     * @return
+     */
     static Expression callGraphHelper(String methodName, Expression args) {
         callX(GRAPH_HELPER, methodName, args)
     }
 
+    /**
+     * Create call expression on {@link OrientGraph}
+     *
+     * @param methodName
+     * @param args
+     * @return
+     */
     static Expression callOrientGraph(String methodName, Expression args) {
         callX(ORIENT_GRAPH, methodName, args)
     }
 
+    /**
+     * Create call expression on {@link OrientGraph#getActiveGraph()}
+     *
+     * @param methodName
+     * @param args
+     * @return
+     */
     static Expression callGetActiveGraph(String methodName, Expression args) {
         callX(callOrientGraph('getActiveGraph', new TupleExpression()), methodName, args)
     }
@@ -298,5 +347,14 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         }
     }
 
-
+    /**
+     * Clean node from 'static mapping' and 'static transient' fields
+     */
+    def clean() {
+        ASTUtil.removeProperty(entity, 'mapping')
+        ASTUtil.removeProperty(entity, 'transients')
+        allFields.each {
+            ASTUtil.removeProperty(entity, it.name)
+        }
+    }
 }
