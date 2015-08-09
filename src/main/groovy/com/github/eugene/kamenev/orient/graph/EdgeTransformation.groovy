@@ -1,6 +1,6 @@
 package com.github.eugene.kamenev.orient.graph
 
-import com.github.eugene.kamenev.orient.ast.ASTUtil
+import com.github.eugene.kamenev.orient.ast.util.ASTUtil
 import com.tinkerpop.blueprints.Direction
 import com.tinkerpop.blueprints.impls.orient.OrientEdge
 import groovy.transform.CompileStatic

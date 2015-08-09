@@ -16,14 +16,17 @@ class OrientGraphTransformationTest extends Specification {
     def setup() {
         OGremlinHelper.global().create()
         factory = new OPartitionedDatabasePoolFactory()
-        db = factory.get('memory:tests', 'root', '123456').acquire()
+        db = factory.get('memory:test', 'admin', 'admin').acquire()
         if (!db.exists()) {
+            db.create()
+        } else {
+            db.drop()
+            db = factory.get('memory:test', 'admin', 'admin').acquire()
             db.create()
         }
     }
 
     def cleanup() {
-        db.close()
         factory.close()
     }
 

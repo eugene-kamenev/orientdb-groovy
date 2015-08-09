@@ -56,7 +56,7 @@ class OrientGraphHelper {
      * @return
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    static OrientVertex getVertexFromEntity(Class clazz, object) {
+    static OrientVertex getVertexFromEntity(object) {
         return (OrientVertex) object?.vertex
     }
 
@@ -69,7 +69,7 @@ class OrientGraphHelper {
      * @param entityClass
      * @return
      */
-    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Iterable<OrientVertex> collection, OType type, Class<T> entityClass) {
+    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Class<T> entityClass, Iterable<OrientVertex> collection, OType type = null) {
         def result = collection.collect {
             transformVertexToEntity(entityClass, (OrientVertex) it)
         }
@@ -82,18 +82,6 @@ class OrientGraphHelper {
     }
 
     /**
-     * Transforms collection of vertices into collection of entities
-     * @since 0.1.0
-     *
-     * @param entityClass
-     * @param collection
-     * @return
-     */
-    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Class<T> entityClass, Iterable<OrientVertex> collection) {
-        transformVertexCollectionToEntity(collection, null, entityClass)
-    }
-
-    /**
      * Transforms collection of entities into collection of vertices
      * @since 0.1.0
      *
@@ -102,7 +90,7 @@ class OrientGraphHelper {
      */
     static Collection<OrientVertex> transformEntityCollectionToVertex(Iterable collection) {
         collection?.collect {
-            getVertexFromEntity(null, it)
+            getVertexFromEntity(it)
         }
     }
 
@@ -141,7 +129,7 @@ class OrientGraphHelper {
      * @return
      */
     static <T> List<T> toList(GremlinPipeline pipeline, Class<T> clazz) {
-        (List<T>) transformVertexCollectionToEntity((Iterable<OrientVertex>) pipeline.toList(), (OType) null, clazz)
+        (List<T>) transformVertexCollectionToEntity(clazz, (Iterable<OrientVertex>) pipeline.toList())
     }
 
     /**
@@ -174,7 +162,7 @@ class OrientGraphHelper {
         if (singleResult) {
             return (T) transformVertexToEntity(resultClass, (OrientVertex) ((Iterable) result)[0])
         } else {
-            return (T) transformVertexCollectionToEntity((Iterable) result, OType.LINKLIST, resultClass)
+            return (T) transformVertexCollectionToEntity(resultClass, (Iterable) result, OType.LINKLIST)
         }
     }
 }

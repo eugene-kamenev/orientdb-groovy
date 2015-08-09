@@ -1,5 +1,4 @@
 package com.github.eugene.kamenev.orient.document
-
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
 import com.orientechnologies.orient.core.sql.OCommandSQL
 import spock.lang.Shared
