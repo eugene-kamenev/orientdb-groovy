@@ -55,7 +55,10 @@ abstract class EntityStructure<T extends EntityProperty> implements Opcodes {
      * Initialization for parsing entity class node
      */
     def initMapping() {
-        transients << ASTUtil.parseValue(entity.getField('transients')?.initialExpression, [])
+        def readTransients = ASTUtil.parseValue(entity.getField('transients')?.initialExpression, []) as List<String>
+        if (readTransients) {
+            transients.addAll(readTransients)
+        }
         allFields = entity.fields.findAll {
             !(it.name in transients) && !(it.static) && (it.modifiers != ACC_TRANSIENT)
         }
@@ -76,12 +79,10 @@ abstract class EntityStructure<T extends EntityProperty> implements Opcodes {
      * Clean node from 'static mapping' and 'static transient' fields
      */
     def clean() {
-        println 'Started entity clean up'
         ASTUtil.removeProperty(entity, 'mapping')
         ASTUtil.removeProperty(entity, 'transients')
         allFields.each {
             ASTUtil.removeProperty(entity, it.name)
         }
-        println 'Ended entity clean up'
     }
 }

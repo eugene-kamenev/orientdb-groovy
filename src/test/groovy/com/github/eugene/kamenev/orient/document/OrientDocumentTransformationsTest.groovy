@@ -16,7 +16,7 @@ class OrientDocumentTransformationsTest extends Specification {
 
     def setup() {
         factory = new OPartitionedDatabasePoolFactory()
-        db = factory.get('memory:test', 'admin', 'admin').acquire()
+        db = factory.get('memory:documentTest', 'admin', 'admin').acquire()
         if (!db.exists()) {
             db.create()
         }
@@ -46,9 +46,9 @@ class OrientDocumentTransformationsTest extends Specification {
                 new Person(lastName: 'Simpson', firstName: 'Bart').save()
             db.commit()
         when: 'execute queries'
-            Person gomer = Person.executeQuery('select from Person where firstName=?', 'Gomer').first()
-            Person lara = Person.executeQuery('select from Person where firstName=:firstName and lastName like :lastName', [firstName: 'Lara', lastName: '%impso%']).first()
-            Person bart = Person.executeQuery('select from Person where firstName=? and lastName like ?', 'Bart', '%imps%').first()
+            Person gomer = Person.executeQuery('select from Person where firstName=?', true, 'Gomer')
+            Person lara = Person.executeQuery('select from Person where firstName=:firstName and lastName like :lastName', true, [firstName: 'Lara', lastName: '%impso%'])
+            Person bart = Person.executeQuery('select from Person where firstName=? and lastName like ?', true, 'Bart', '%imps%')
         then: 'check retrieved values'
             assert gomer.firstName == 'Gomer'
             assert lara.firstName == 'Lara'
@@ -62,7 +62,7 @@ class OrientDocumentTransformationsTest extends Specification {
             db.begin()
                 person.save()
             db.commit()
-        Person nPerson = Person.executeQuery('select from Person where city.title = ?', 'New York').first()
+        Person nPerson = Person.executeQuery('select from Person where city.title = ?', true, 'New York')
         then: 'check that entities have generated ids'
             person.id != null
             person.city.id != null
@@ -77,7 +77,7 @@ class OrientDocumentTransformationsTest extends Specification {
             db.begin()
                 person.save()
             db.commit()
-        Person person1 = Person.executeQuery('select from Person where profile[isPublic] = ?', true).first()
+        Person person1 = Person.executeQuery('select from Person where profile[isPublic] = ?', true, true)
         then: 'check entities'
             person1 != null
             person1.profile != null
@@ -93,7 +93,7 @@ class OrientDocumentTransformationsTest extends Specification {
             db.begin()
                 person.save()
             db.commit()
-        Person person1 = Person.executeQuery('select from Person where cities.size() > ?', 0).first()
+        Person person1 = Person.executeQuery('select from Person where cities.size() > ?', true, 0)
         then: 'check entities'
             person1.cities.size() == 2
 
@@ -107,7 +107,7 @@ class OrientDocumentTransformationsTest extends Specification {
             db.begin()
                 person.save()
             db.commit()
-        Person person1 = Person.executeQuery('select from Person where citiesSet.size() > ?', 0).first()
+        Person person1 = Person.executeQuery('select from Person where citiesSet.size() > ?', true, 0)
         then: 'check entities'
             person1.citiesSet.size() == 2
     }

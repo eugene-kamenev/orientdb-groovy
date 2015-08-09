@@ -8,6 +8,7 @@ import com.github.eugene.kamenev.orient.graph.Edge
 import com.github.eugene.kamenev.orient.graph.OrientGraphHelper
 import com.github.eugene.kamenev.orient.graph.Vertex
 import com.orientechnologies.orient.core.db.record.OIdentifiable
+import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.tinkerpop.blueprints.impls.orient.OrientEdge
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
@@ -100,9 +101,9 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         }
         selfTypeConstructor.addStatement(assignS(varX(injectedObject), varX(selfType[0])))
         // add initial values to empty constructor
-        entityProperties.each {name, orientProperty ->
+        entityProperties.each {k, orientProperty ->
             if (!orientProperty.edge && orientProperty.hasInitialValue()) {
-                emptyConstructor.addStatement(stmt(callThisX("set${name.capitalize()}", orientProperty.fieldNode.initialValueExpression)))
+                emptyConstructor.addStatement(stmt(callThisX("set${orientProperty.nodeName.capitalize()}", orientProperty.fieldNode.initialValueExpression)))
             }
         }
         entity.addConstructor(new ConstructorNode(ACC_PUBLIC, emptyConstructor))
@@ -112,6 +113,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
 
     def createGetters() {
         entityProperties.each {k, orientProperty ->
+            println "processing getter for $k"
             def methodBody = new BlockStatement()
             def resultVar = varX('resultVar', orientProperty.nodeType)
             Expression assignExpression = null
@@ -120,8 +122,8 @@ class OrientStructure extends EntityStructure<OrientProperty> {
             // process formula feature
             if (orientProperty.formula) {
                 def queryArgs = args(classX(orientProperty.collectionGenericType),
-                        constX(orientProperty.mapping.query),
-                        constX(orientProperty.collection),
+                        constX(orientProperty.mapping.formula),
+                        constX(!orientProperty.collection),
                         orientProperty.mapping?.params as Expression)
                 // this can be wrong, because we should take care of type result object, not the
                 // injected one.
@@ -149,12 +151,11 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         entityProperties.each {k, orientProperty ->
             if (!orientProperty.formula) {
                 def methodBody = new BlockStatement()
-                String methodName = null
-                def setterParam = param(orientProperty.collectionGenericType, orientProperty.nodeName)
+                def setterParam = param(orientProperty.nodeType, orientProperty.nodeName)
                 if (orientProperty.edge) {
-                    createEdgeSetter(orientProperty, setterParam)
+                    createEdgeSetter(orientProperty)
                 } else {
-                    methodBody.addStatement(stmt(setInInjectedObject(orientProperty, setterParam)))
+                    methodBody.addStatement(stmt(setToInjectedObject(orientProperty, setterParam)))
                     entity.addMethod("set${orientProperty.nodeName.capitalize()}", ACC_PUBLIC, methodReturnType, params(setterParam), [] as ClassNode[], methodBody)
                 }
             }
@@ -188,14 +189,15 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         def thisVertex = varX(injectedObject)
         def callThisExpression = callX(callGraphHelper('pipe', args(thisVertex)), direction, args(constX(edgeName)))
         def arguments = args(classX(currentNode), callX(callThisExpression, pipeResultMethodName))
-        callDocHelper(methodName, arguments)
+        callGraphHelper(methodName, arguments)
     }
 
-    def createEdgeSetter(OrientProperty property, Parameter parameter) {
+    def createEdgeSetter(OrientProperty property) {
         Statement setterStatenent = null
         def edgeClass = property.mapping.edge as ClassExpression
+        def parameter = param(property.collectionGenericType, property.nodeName)
         def setterVar = varX(parameter)
-        def edgeNodeAnnotation = edgeClass.type.plainNodeReference.getAnnotations(EDGE)[0]
+        def edgeNodeAnnotation = edgeClass.type.plainNodeReference.getAnnotations(ORIENT_EDGE)[0]
         def inNode = (ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.from)
         def outNode = (ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.to)
         if (outNode == entity) {
@@ -208,7 +210,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         entity.addMethod(new MethodNode(methodName, ACC_PUBLIC, edgeClass.type.plainNodeReference, params(parameter), [] as ClassNode[], setterStatenent))
     }
 
-    Expression setInInjectedObject(OrientProperty orientProperty, Parameter parameter) {
+    Expression setToInjectedObject(OrientProperty orientProperty, Parameter parameter) {
         ArgumentListExpression arguments = args(constX(orientProperty.mapping.field), varX(parameter))
         def isTyped = orientProperty.link || orientProperty.linkedList || orientProperty.linkedSet || orientProperty.embedded
         if (injectedObject.type == VERTEX || injectedObject.type == EDGE) {
@@ -241,14 +243,14 @@ class OrientStructure extends EntityStructure<OrientProperty> {
      */
     Expression getFromInjectedObject(OrientProperty orientProperty) {
         def isTyped = orientProperty.link || orientProperty.linkedList || orientProperty.linkedSet || orientProperty.embedded
-
         if (injectedObject.type == VERTEX || injectedObject.type == EDGE) {
             def getterExpression = callX(varX(injectedObject), 'getProperty', args(constX(orientProperty.mapping.field)))
             if (isTyped) {
                 def methodName = orientProperty.collection ? 'transformVertexCollectionToEntity' : 'transformVertexToEntity'
-                def arguments = args(constX(orientProperty.collectionGenericType), getterExpression)
+                ArgumentListExpression arguments = args(classX(orientProperty.collectionGenericType), getterExpression)
                 if (orientProperty.collection) {
-                    arguments.addExpression(orientProperty.mapping.type as Expression)
+                    arguments.addExpression(orientProperty.orientType ?
+                            (orientProperty.mapping.type as Expression) : propX(classX(ClassHelper.make(OType)), 'LINKLIST'))
                 }
                 return callGraphHelper(methodName, arguments)
             }
@@ -257,10 +259,11 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         if (injectedObject.type == DOCUMENT) {
             def getterExpression = callX(varX(injectedObject), 'field', args(constX(orientProperty.mapping.field)))
             if (isTyped) {
-                def methodName = orientProperty.collection ? 'transformDocument' : 'transformDocumentCollection'
-                def arguments = args(constX(orientProperty.collectionGenericType), getterExpression)
+                def methodName = orientProperty.collection ?  'transformDocumentCollection' : 'transformDocument'
+                ArgumentListExpression arguments = args(classX(orientProperty.collectionGenericType), getterExpression)
                 if (orientProperty.collection) {
-                    arguments.addExpression(orientProperty.mapping.type as Expression)
+                    arguments.addExpression(orientProperty.orientType ?
+                            (orientProperty.mapping.type as Expression) : propX(classX(ClassHelper.make(OType)), 'LINKLIST'))
                 }
                 return callDocHelper(methodName, arguments)
             }

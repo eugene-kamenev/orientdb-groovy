@@ -1,32 +1,29 @@
 package com.github.eugene.kamenev.orient.graph
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
-import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.graph.gremlin.OGremlinHelper
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
 import spock.lang.Shared
 import spock.lang.Specification
 
 class OrientGraphTransformationTest extends Specification {
-    @Shared
-    OPartitionedDatabasePoolFactory factory
 
     @Shared
-    ODatabaseDocumentTx db
+    def factory
+
+    @Shared
+    def db
 
     def setup() {
-        OGremlinHelper.global().create()
         factory = new OPartitionedDatabasePoolFactory()
-        db = factory.get('memory:test', 'admin', 'admin').acquire()
+        db = factory.get('memory:graphTest', 'admin', 'admin').acquire()
+        OGremlinHelper.global().create()
         if (!db.exists()) {
-            db.create()
-        } else {
-            db.drop()
-            db = factory.get('memory:test', 'admin', 'admin').acquire()
             db.create()
         }
     }
 
     def cleanup() {
+        db.close()
         factory.close()
     }
 
@@ -72,7 +69,7 @@ class OrientGraphTransformationTest extends Specification {
         first.livesIn.id == edge5.out.id
         edge5.out.citizens.size() == 1
         edge5.out.id == amsterdam.id
-        newYork.citizens.find { it.id == first.id } != null
+        newYork.citizens.find {it.id == first.id} != null
         second.visitedCities.size() > 0
         newYork.visitedPersons.size() == 2
         second.visitedCities.size() == 2
@@ -93,6 +90,5 @@ class OrientGraphTransformationTest extends Specification {
         and: 'check gremlin pipe extension method toList implementation'
         first.vertex.pipe().in('Visited').has('title', 'New York').toList(City).size() == 1
         amsterdam.vertex.pipe().out('Visited').toList(Person).size() == 2
-
     }
 }

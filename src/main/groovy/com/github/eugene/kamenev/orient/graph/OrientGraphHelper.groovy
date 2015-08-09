@@ -1,6 +1,5 @@
 package com.github.eugene.kamenev.orient.graph
 
-import com.orientechnologies.orient.core.db.record.OIdentifiable
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
@@ -9,7 +8,6 @@ import com.tinkerpop.blueprints.impls.orient.OrientVertex
 import com.tinkerpop.gremlin.java.GremlinPipeline
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
-
 /**
  * OrientDB graph helper methods
  *
@@ -40,7 +38,7 @@ class OrientGraphHelper {
      * @param vertex
      * @return
      */
-    static <T> T transformVertexToEntity(Class<T> entityClass, OIdentifiable vertex) {
+    static <T> T transformVertexToEntity(Class<T> entityClass, Object vertex) {
         if (vertex) {
             return entityClass.newInstance(vertex)
         }
@@ -69,9 +67,9 @@ class OrientGraphHelper {
      * @param entityClass
      * @return
      */
-    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Class<T> entityClass, Iterable<OrientVertex> collection, OType type = null) {
-        def result = collection.collect {
-            transformVertexToEntity(entityClass, (OrientVertex) it)
+    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Class<T> entityClass, def collection, OType type = null) {
+        def result = ((Iterable)collection).collect {
+            transformVertexToEntity(entityClass, it)
         }
         switch (type) {
             case OType.LINKSET:

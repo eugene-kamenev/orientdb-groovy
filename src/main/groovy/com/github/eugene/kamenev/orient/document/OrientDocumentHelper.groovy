@@ -68,8 +68,8 @@ class OrientDocumentHelper {
      * @param documents
      * @return
      */
-    static <T> Iterable<T> transformDocumentCollection(Class<T> clazz, Iterable<?> documents, OType type = null) {
-        def collection = documents.collect {
+    static <T> Iterable<T> transformDocumentCollection(Class<T> clazz, def documents, OType type = null) {
+        def collection = ((Iterable)documents).collect {
             transformDocument(clazz, it)
         }
         switch (type) {
