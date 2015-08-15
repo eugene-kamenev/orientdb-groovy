@@ -1,21 +1,17 @@
 # What can Groovy make for OrientDB?
 [ ![Download](https://api.bintray.com/packages/eugene-kamenev/maven/orientdb-groovy/images/download.svg) ](https://bintray.com/eugene-kamenev/maven/orientdb-groovy/_latestVersion)
 
-In this project I am trying to provide Groovy way to work with orientdb as simple as possible.
 This project contains Groovy AST Transformations trying to mimic grails-entity style.
-All useful information you can find in Spock tests dir.
-For now Document API and Graph API with gremlin are supported. Built with OrientDB 2.1-RC6 and Apache Groovy 2.4.4
+All useful information you can find in Spock tests dir. Document API and Graph API with gremlin are supported. Built with OrientDB 2.1.0 and Apache Groovy 2.4.4
 
 #Gradle config
 ```groovy
 repositories {
-    maven {
-        url 'https://dl.bintray.com/eugene-kamenev/maven'
-    }
+    jcenter()
 }
 
 dependencies {
-    compile "com.github.eugene-kamenev:orientdb-groovy:0.1.0" 
+    compile "com.github.eugene-kamenev:orientdb-groovy:0.1.1" 
 }
 ```
 Example how to use it with Spring Boot
@@ -169,4 +165,5 @@ class Country {
     def personList2 = User.executeQuery('select from User where firstName=:a and lastName like :b', [a: 'Bart', b: '%Simpson%'])
 ```
 
-Check [OrientDocumentTransformationsTest](https://github.com/eugene-kamenev/orientdb-groovy/blob/master/src/test/groovy/com/groovy/orient/document/tests/OrientDocumentTransformationsTest.groovy) for more details.
+###Schema Initialization
+####TODO explain
