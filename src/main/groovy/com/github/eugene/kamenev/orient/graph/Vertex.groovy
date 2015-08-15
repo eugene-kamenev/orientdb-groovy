@@ -17,9 +17,18 @@ import java.lang.annotation.Target
 @Retention(RetentionPolicy.SOURCE)
 @GroovyASTTransformationClass(['com.github.eugene.kamenev.orient.graph.VertexTransformation'])
 @interface Vertex {
+
     /**
      * Vertex class name in OrientDB
      * @return
      */
     String value() default ''
+
+    /**
+     * Flag to generate static initSchema and initSchemaLinks methods
+     *
+     * @since 0.1.1
+     * @return
+     */
+    boolean initSchema() default false
 }

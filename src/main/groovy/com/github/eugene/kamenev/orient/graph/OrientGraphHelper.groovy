@@ -1,6 +1,5 @@
 package com.github.eugene.kamenev.orient.graph
 
-import com.orientechnologies.orient.core.db.record.OIdentifiable
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
@@ -9,7 +8,6 @@ import com.tinkerpop.blueprints.impls.orient.OrientVertex
 import com.tinkerpop.gremlin.java.GremlinPipeline
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
-
 /**
  * OrientDB graph helper methods
  *
@@ -40,7 +38,7 @@ class OrientGraphHelper {
      * @param vertex
      * @return
      */
-    static <T> T transformVertexToEntity(Class<T> entityClass, OIdentifiable vertex) {
+    static <T> T transformVertexToEntity(Class<T> entityClass, Object vertex) {
         if (vertex) {
             return entityClass.newInstance(vertex)
         }
@@ -56,7 +54,7 @@ class OrientGraphHelper {
      * @return
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    static OrientVertex getVertexFromEntity(Class clazz, object) {
+    static OrientVertex getVertexFromEntity(object) {
         return (OrientVertex) object?.vertex
     }
 
@@ -69,9 +67,9 @@ class OrientGraphHelper {
      * @param entityClass
      * @return
      */
-    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Iterable<OrientVertex> collection, OType type, Class<T> entityClass) {
-        def result = collection.collect {
-            transformVertexToEntity(entityClass, (OrientVertex) it)
+    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Class<T> entityClass, def collection, OType type = null) {
+        def result = ((Iterable)collection).collect {
+            transformVertexToEntity(entityClass, it)
         }
         switch (type) {
             case OType.LINKSET:
@@ -79,18 +77,6 @@ class OrientGraphHelper {
                 break;
         }
         return result
-    }
-
-    /**
-     * Transforms collection of vertices into collection of entities
-     * @since 0.1.0
-     *
-     * @param entityClass
-     * @param collection
-     * @return
-     */
-    static <T, C extends Collection<T>> C transformVertexCollectionToEntity(Class<T> entityClass, Iterable<OrientVertex> collection) {
-        transformVertexCollectionToEntity(collection, null, entityClass)
     }
 
     /**
@@ -102,7 +88,7 @@ class OrientGraphHelper {
      */
     static Collection<OrientVertex> transformEntityCollectionToVertex(Iterable collection) {
         collection?.collect {
-            getVertexFromEntity(null, it)
+            getVertexFromEntity(it)
         }
     }
 
@@ -141,7 +127,7 @@ class OrientGraphHelper {
      * @return
      */
     static <T> List<T> toList(GremlinPipeline pipeline, Class<T> clazz) {
-        (List<T>) transformVertexCollectionToEntity((Iterable<OrientVertex>) pipeline.toList(), (OType) null, clazz)
+        (List<T>) transformVertexCollectionToEntity(clazz, (Iterable<OrientVertex>) pipeline.toList())
     }
 
     /**
@@ -174,7 +160,7 @@ class OrientGraphHelper {
         if (singleResult) {
             return (T) transformVertexToEntity(resultClass, (OrientVertex) ((Iterable) result)[0])
         } else {
-            return (T) transformVertexCollectionToEntity((Iterable) result, OType.LINKLIST, resultClass)
+            return (T) transformVertexCollectionToEntity(resultClass, (Iterable) result, OType.LINKLIST)
         }
     }
 }

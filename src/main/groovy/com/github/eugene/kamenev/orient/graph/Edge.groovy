@@ -36,4 +36,12 @@ import java.lang.annotation.Target
      * @since 0.1.0
      */
     Class to()
+
+    /**
+    * Flag to generate static initSchema and initSchemaLinks methods
+    *
+    * @since 0.1.1
+    * @return
+    */
+    boolean initSchema() default false
 }
