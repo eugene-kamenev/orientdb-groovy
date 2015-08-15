@@ -1,21 +1,22 @@
 package com.github.eugene.kamenev.orient.graph
-import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
+
 import com.orientechnologies.orient.graph.gremlin.OGremlinHelper
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
+import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import spock.lang.Shared
 import spock.lang.Specification
 
 class OrientGraphTransformationTest extends Specification {
 
     @Shared
-    def factory
+    OrientGraphFactory factory
 
     @Shared
     def db
 
     def setup() {
-        factory = new OPartitionedDatabasePoolFactory()
-        db = factory.get('memory:graphTest', 'admin', 'admin').acquire()
+        factory = new OrientGraphFactory('memory:graphTest', 'admin', 'admin')
+        db = factory.getNoTx().rawGraph
         OGremlinHelper.global().create()
         if (!db.exists()) {
             db.create()

@@ -39,6 +39,14 @@ class OrientProperty extends EntityProperty {
     }
 
     /**
+     * If property is mapped specially
+     * @return
+     */
+    boolean isSpecialType() {
+        link || linkedList || edge || embedded || formula || linkedSet
+    }
+
+    /**
      * Get orient type from mapping
      * @return
      */

@@ -1,30 +1,25 @@
 package com.github.eugene.kamenev.orient.document
-import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory
+import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.core.sql.OCommandSQL
-import spock.lang.Shared
+import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import spock.lang.Specification
-import spock.lang.Stepwise
 
-@Stepwise
 class OrientDocumentTransformationsTest extends Specification {
 
-    @Shared
-    def factory
+    ODatabaseDocumentTx db
 
-    @Shared
-    def db
+    OrientGraphFactory orientGraphFactory
 
     def setup() {
-        factory = new OPartitionedDatabasePoolFactory()
-        db = factory.get('memory:documentTest', 'admin', 'admin').acquire()
+        orientGraphFactory = new OrientGraphFactory('memory:documentTest', 'admin', 'admin')
+        db = orientGraphFactory.noTx.rawGraph
         if (!db.exists()) {
             db.create()
         }
     }
 
     def cleanup() {
-        db.close()
-        factory.close()
+       // db.close()
     }
 
     def 'test that transformation applied right'() {

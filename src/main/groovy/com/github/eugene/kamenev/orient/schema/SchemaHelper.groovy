@@ -1,5 +1,6 @@
 package com.github.eugene.kamenev.orient.schema
 
+import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.core.metadata.schema.OClass
 import com.orientechnologies.orient.core.metadata.schema.OProperty
 import com.orientechnologies.orient.core.metadata.schema.OSchema
@@ -14,6 +15,21 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class SchemaHelper {
+    /**
+     *
+     * @param tx
+     * @param mapping
+     * @param className
+     * @param classType
+     */
+    static void initClass(ODatabaseDocumentTx tx, Map mapping, String className, String classType) {
+        def schema = tx.getMetadata().getSchema()
+        def oclass = getOrCreateClass(schema, className)
+        if (classType) {
+            oclass.setSuperClasses([schema.getClass(classType)])
+        }
+        createSimpleProperties(oclass, mapping)
+    }
 
     static OClass getOrCreateClass(OSchema schema, String className) {
         def oclass = schema.getClass(className)
@@ -24,16 +40,19 @@ class SchemaHelper {
     }
 
     static OProperty getOrCreateProperty(OClass oClass, String property, Class type) {
-        def prop = oClass.getProperty(property)
-        if (!prop) {
-            prop = oClass.createProperty(property, OType.getTypeByClass(type))
+        if (property != '@rid') {
+            def prop = oClass.getProperty(property)
+            if (!prop) {
+                prop = oClass.createProperty(property, OType.getTypeByClass(type))
+            }
+            return prop
         }
-        prop
+        null
     }
 
     static void createSimpleProperties(OClass oClass, Map mapping) {
-        mapping.each { prop, args ->
-            createPropertyFromMap(oClass, (Map)args, (String)prop)
+        mapping.each {prop, args ->
+            createPropertyFromMap(oClass, (Map) args, (String) prop)
         }
     }
 

@@ -26,7 +26,9 @@ contributor(context(scope: annotatedScope(ctype: "com.github.eugene.kamenev.orie
 contributor(context()) {
     try {
         if (classType?.hasAnnotation('com.github.eugene.kamenev.orient.document.OrientDocument')) {
-            method(name: 'executeQuery', type: "List<$classType.name>", params: ['query': String.name, 'params': 'Object[]'], isStatic: true)
+            method(name: 'executeQuery', type: "List<$classType.name>", params: ['query': String.name, 'params': 'Object...'], isStatic: true)
+            method(name: 'executeQuery', type: "$classType.name", params: ['query': String.name, 'singleResult': 'boolean', 'params': 'Object...'], isStatic: true)
+
             property name: 'document', type: 'com.orientechnologies.orient.core.record.impl.ODocument'
             // find OrientDBODocumentDelegate
             def scope = com.intellij.psi.search.GlobalSearchScope.allScope(project);
@@ -71,7 +73,6 @@ contributor(context()) {
             delegatesTo(clazz)
         }
     } catch (Exception e) {
-
     }
 }
 
