@@ -1,6 +1,6 @@
 package com.github.eugene.kamenev.orient.graph
 
-import com.github.eugene.kamenev.orient.ast.util.OrientEdgeStructure
+import com.github.eugene.kamenev.orient.ast.OrientEdgeStructure
 import com.tinkerpop.blueprints.Direction
 import com.tinkerpop.blueprints.impls.orient.OrientEdge
 import groovy.transform.CompileStatic
@@ -31,7 +31,6 @@ class EdgeTransformation extends AbstractASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         AnnotationNode annotation = (AnnotationNode) nodes[0];
         ClassNode annotatedClass = (ClassNode) nodes[1];
-
         def edgeFieldNode = annotatedClass.addField('edge', ACC_PUBLIC | ACC_FINAL, orientEdgeClassNode, new EmptyExpression())
         def annotationNode = new AnnotationNode(delegateNode)
         def delegateTransformation = new DelegateASTTransformation()

@@ -1,5 +1,6 @@
-package com.github.eugene.kamenev.orient.ast.util
-import com.github.eugene.kamenev.orient.ast.OrientStructure
+package com.github.eugene.kamenev.orient.ast
+
+import com.github.eugene.kamenev.orient.ast.util.ASTUtil
 import com.tinkerpop.blueprints.Direction
 import groovy.transform.CompileStatic
 import org.codehaus.groovy.ast.AnnotationNode
@@ -8,7 +9,6 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.Parameter
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
 /**
  * OrientEdgeStructure
  *

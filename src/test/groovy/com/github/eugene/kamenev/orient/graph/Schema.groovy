@@ -3,10 +3,10 @@ package com.github.eugene.kamenev.orient.graph
 import com.orientechnologies.orient.core.metadata.schema.OType
 import groovy.transform.CompileStatic
 
-@Vertex(initSchema = true)
+@Vertex
 @CompileStatic
 class Person {
-    String firstName = 'Fucking bullshit'
+    String firstName
     String lastName
     City livesIn
     List<City> visitedCities
@@ -31,13 +31,13 @@ class Person {
 class Visited {
 }
 
-@Edge(from = Person, to = City, initSchema = true)
+@Edge(from = Person, to = City)
 @CompileStatic
 class Lives {
     Date since
 }
 
-@Vertex(initSchema = true)
+@Vertex
 @CompileStatic
 class City {
     String title

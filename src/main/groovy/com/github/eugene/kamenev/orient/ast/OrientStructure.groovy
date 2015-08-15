@@ -77,6 +77,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         createSetters()
         createConstructors()
         createInitSchemaMethod()
+        createInitSchemaLinksMethod()
     }
 
     def createConstructors() {
@@ -120,7 +121,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         boolean initSchema = ASTUtil.parseValue(annotation.members.initSchema, false)
         if (initSchema) {
             def mappingMap = new MapExpression()
-            entityProperties.each { k, orientProperty ->
+            entityProperties.each {k, orientProperty ->
                 if (!orientProperty.specialType) {
                     def mappingEntries = []
                     mappingEntries << new MapEntryExpression(constX('clazz'), classX(orientProperty.fieldNode.type))
@@ -132,32 +133,62 @@ class OrientStructure extends EntityStructure<OrientProperty> {
                     }
                 }
             }
-            if (mappingMap.mapEntryExpressions.size() > 0) {
-                println "Generating initSchema method for class $className"
-                def params = params(param(ODATABASE_TX, 'tx'))
-                def args = args(varX(params[0]), mappingMap, constX(className))
-                if (document) {
-                    args.addExpression(constX(null))
-                }
-                if (edge) {
-                    args.addExpression(constX('E'))
-                }
-                if (vertex) {
-                    args.addExpression(constX('V'))
-                }
-                entity.addMethod('initSchema', ACC_PUBLIC | ACC_STATIC,
-                        ClassHelper.VOID_TYPE, params,
-                        [] as ClassNode[],
-                        block(stmt(callX(SCHEMA_HELPER, 'initClass', args))))
+            def params = params(param(ODATABASE_TX, 'tx'))
+            def args = args(varX(params[0]), mappingMap, constX(className))
+            if (document) {
+                args.addExpression(constX(null))
             }
+            if (edge) {
+                args.addExpression(constX('E'))
+            }
+            if (vertex) {
+                args.addExpression(constX('V'))
+            }
+            entity.addMethod('initSchema', ACC_PUBLIC | ACC_STATIC,
+                    ClassHelper.VOID_TYPE, params,
+                    [] as ClassNode[],
+                    block(stmt(callX(SCHEMA_HELPER, 'initClass', args))))
         }
     }
+
     /**
      * Create initSchemaLinks method for class
      * It can initialize orientdb links and other properties
      */
     def createInitSchemaLinksMethod() {
-
+        boolean initSchema = ASTUtil.parseValue(annotation.members.initSchema, false)
+        if (initSchema) {
+            def mappingMap = new MapExpression()
+            entityProperties.each {k, orientProperty ->
+                if (orientProperty.linkedType) {
+                    def mappingEntries = []
+                    def annotationNode = orientProperty.collectionGenericType.annotations.find {
+                        it.classNode in [ORIENT_GROOVY_VERTEX, ORIENT_GROOVY_EDGE, ORIENT_GROOVY_DOCUMENT]
+                    }
+                    def clazzName = ASTUtil.parseValue(annotationNode?.members?.value, orientProperty.collectionGenericType.nameWithoutPackage)
+                    mappingEntries << new MapEntryExpression(constX('linkedClass'), constX(clazzName))
+                    mappingEntries << new MapEntryExpression(constX('type'), orientProperty.mapping.type as Expression)
+                    if (mappingEntries) {
+                        mappingMap.addMapEntryExpression(constX(orientProperty.mapping.field), new MapExpression(mappingEntries))
+                    }
+                }
+            }
+            def params = params(param(ODATABASE_TX, 'tx'))
+            def args = args(varX(params[0]), mappingMap, constX(className))
+            if (document) {
+                args.addExpression(constX(null))
+            }
+            if (edge) {
+                args.addExpression(constX('E'))
+            }
+            if (vertex) {
+                args.addExpression(constX('V'))
+            }
+            entity.addMethod('initSchemaLinks', ACC_PUBLIC | ACC_STATIC,
+                    ClassHelper.VOID_TYPE, params,
+                    [] as ClassNode[],
+                    block(stmt(callX(SCHEMA_HELPER, 'initClassLinks', args))))
+        }
     }
 
     /**
@@ -238,7 +269,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         def inNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.from))
         def outNode = ((ClassNode) ASTUtil.annotationValue(edgeNodeAnnotation.members.to))
         def edgeName = (String) ASTUtil.annotationValue(edgeNodeAnnotation.members.name) ?: edgeClass.nameWithoutPackage
-        def isCollection = orientProperty.isCollection()
+        def isCollection = orientProperty.collection
         def methodName = isCollection ? 'transformVertexCollectionToEntity' : 'transformVertexToEntity'
         def pipeResultMethodName = isCollection ? 'toList' : 'next'
         def direction = inNode == entity ? 'in' : 'out'
@@ -391,27 +422,33 @@ class OrientStructure extends EntityStructure<OrientProperty> {
     }
 
     /**
-     * Removes all mapped properties from entity class node
+     * if injected object is vertex
      * @return
      */
-    def removeAllMappedProperties() {
-        allFields.each {
-            ASTUtil.removeProperty(entity, it.name)
-        }
-    }
-
     boolean isVertex() {
         injectedObject.type == VERTEX
     }
 
+    /**
+     * if injected object is edge
+     * @return
+     */
     boolean isEdge() {
         injectedObject.type == EDGE
     }
 
+    /**
+     * if injected object is document
+     * @return
+     */
     boolean isDocument() {
         injectedObject.type == DOCUMENT
     }
 
+    /**
+     * if injected object is edge
+     * @return
+     */
     boolean isVertexOrEdge() {
         vertex || edge
     }

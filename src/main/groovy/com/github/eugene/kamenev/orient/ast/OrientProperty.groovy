@@ -135,4 +135,13 @@ class OrientProperty extends EntityProperty {
     boolean isSimpleTyped() {
         mapping.oclass in ASTUtil.simpleTypes
     }
+
+    /**
+     * if property is a link typed
+     *
+     * @return
+     */
+    boolean isLinkedType() {
+        link || linkedList || linkedSet
+    }
 }

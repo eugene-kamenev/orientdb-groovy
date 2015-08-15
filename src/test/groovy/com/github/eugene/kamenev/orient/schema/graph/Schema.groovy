@@ -1,9 +1,11 @@
-package com.github.eugene.kamenev.orient.schema
+package com.github.eugene.kamenev.orient.schema.graph
 
 import com.github.eugene.kamenev.orient.graph.Edge
 import com.github.eugene.kamenev.orient.graph.Vertex
+import groovy.transform.CompileStatic
 
 @Vertex(initSchema = true)
+@CompileStatic
 class Person {
     String firstName
     String lastName
@@ -12,12 +14,13 @@ class Person {
     static mapping = {
         firstName index: 'notUnique', field: 'first_name'
         lastName index: 'unique', field: 'last_name'
-        ownedPets edge: Owned
+        ownedPets edge: Owns
     }
 }
 
 @Edge(from = Person, to = Pet, initSchema = true)
-class Owned {
+@CompileStatic
+class Owns {
     Date on
     static mapping = {
         on field: 'on_date', index: 'notUnique'
@@ -25,6 +28,7 @@ class Owned {
 }
 
 @Vertex(initSchema = true)
+@CompileStatic
 class Pet {
     String name
     Date birthDate
@@ -33,6 +37,6 @@ class Pet {
     static mapping = {
         name index: 'notUnique', field: 'pet_name'
         birthDate index: 'notUnique'
-        owner edge: Owned
+        owner edge: Owns
     }
 }

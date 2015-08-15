@@ -1,4 +1,4 @@
-package com.github.eugene.kamenev.orient.schema
+package com.github.eugene.kamenev.orient.schema.graph
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import spock.lang.Specification
@@ -38,12 +38,15 @@ class GraphSchemaTransformationTest extends Specification {
         given: 'call init schema methods'
             Person.initSchema(db)
             Pet.initSchema(db)
-            Owned.initSchema(db)
+            Owns.initSchema(db)
+            Person.initSchemaLinks(db)
+            Pet.initSchemaLinks(db)
+            Owns.initSchemaLinks(db)
         when: 'get db schema and classes'
             def schema = db.metadata.schema
             def personClass = schema.getClass('Person')
             def petClass = schema.getClass('Pet')
-            def ownedClass = schema.getClass('Owned')
+            def ownedClass = schema.getClass('Owns')
         then: 'check classes are not null'
             personClass != null
             petClass != null
@@ -61,7 +64,7 @@ class GraphSchemaTransformationTest extends Specification {
         and: 'check created indexes'
             personClass.indexes.find { it.name == 'Person.first_name' && it.type == 'NOTUNIQUE' }
             personClass.indexes.find { it.name == 'Person.last_name' && it.type == 'UNIQUE' }
-            ownedClass.indexes.find { it.name == 'Owned.on_date' && it.type == 'NOTUNIQUE' }
+            ownedClass.indexes.find { it.name == 'Owns.on_date' && it.type == 'NOTUNIQUE' }
             petClass.indexes.find { it.name == 'Pet.pet_name' && it.type == 'NOTUNIQUE' }
             petClass.indexes.find { it.name == 'Pet.birthDate' && it.type == 'NOTUNIQUE' }
     }

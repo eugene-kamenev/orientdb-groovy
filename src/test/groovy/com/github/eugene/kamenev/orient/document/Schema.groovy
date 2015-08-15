@@ -51,10 +51,8 @@ class Person {
 class City {
     String id
     String title
-    String asdasd
 
     static mapping = {
         id(field: '@rid')
     }
-
 }

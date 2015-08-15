@@ -15,7 +15,9 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class SchemaHelper {
+
     /**
+     * Init class mapping
      *
      * @param tx
      * @param mapping
@@ -31,6 +33,30 @@ class SchemaHelper {
         createSimpleProperties(oclass, mapping)
     }
 
+    /**
+     * Init class links properties
+     *
+     * @param tx
+     * @param mapping
+     * @param className
+     * @param classType
+     */
+    static void initClassLinks(ODatabaseDocumentTx tx, Map mapping, String className, String classType) {
+        def schema = tx.getMetadata().getSchema()
+        def oclass = getOrCreateClass(schema, className)
+        if (classType) {
+            oclass.setSuperClasses([schema.getClass(classType)])
+        }
+        createLinkedProperties(oclass, mapping, schema)
+    }
+
+    /**
+     * Get or create class in OrientDB
+     *
+     * @param schema
+     * @param className
+     * @return
+     */
     static OClass getOrCreateClass(OSchema schema, String className) {
         def oclass = schema.getClass(className)
         if (!oclass) {
@@ -39,6 +65,14 @@ class SchemaHelper {
         oclass
     }
 
+    /**
+     * Get or create property in OrientDB
+     *
+     * @param oClass
+     * @param property
+     * @param type
+     * @return
+     */
     static OProperty getOrCreateProperty(OClass oClass, String property, Class type) {
         if (property != '@rid') {
             def prop = oClass.getProperty(property)
@@ -50,12 +84,57 @@ class SchemaHelper {
         null
     }
 
+    /**
+     * Get or create property in OrientDB
+     *
+     * @param oClass
+     * @param property
+     * @param type
+     * @return
+     */
+    static OProperty getOrCreateLinkedProperty(OClass oClass, String property, OType type, OClass linkedClass) {
+        def prop = oClass.getProperty(property)
+        if (!prop) {
+            prop = oClass.createProperty(property, type, linkedClass)
+        }
+        return prop
+    }
+
+    /**
+     * Creates simple properties for class
+     *
+     * @param oClass
+     * @param mapping
+     */
     static void createSimpleProperties(OClass oClass, Map mapping) {
         mapping.each {prop, args ->
             createPropertyFromMap(oClass, (Map) args, (String) prop)
         }
     }
 
+    /**
+     * Create linked properties
+     *
+     * @param oClass
+     * @param mapping
+     * @param schema
+     */
+    static void createLinkedProperties(OClass oClass, Map mapping, OSchema schema) {
+        mapping.each {prop, args ->
+            def type = ((Map)args).type as OType
+            def linkedClassName = ((Map)args).linkedClass as String
+            def linkedClass = getOrCreateClass(schema, linkedClassName)
+            getOrCreateLinkedProperty(oClass, (String) prop, type as OType, linkedClass)
+        }
+    }
+
+    /**
+     * Creates property from mapping
+     *
+     * @param oClass
+     * @param mapping
+     * @param propertyName
+     */
     static void createPropertyFromMap(OClass oClass, Map<String, ?> mapping, String propertyName) {
         def index = mapping.index
         def clazz = (Class) mapping.clazz
@@ -71,6 +150,12 @@ class SchemaHelper {
         }
     }
 
+    /**
+     * Return index type from string
+     *
+     * @param indexType
+     * @return index type from string
+     */
     static OClass.INDEX_TYPE getIndexTypeFromString(String indexType) {
         switch (indexType) {
             case 'dictionary': return OClass.INDEX_TYPE.DICTIONARY; break;
