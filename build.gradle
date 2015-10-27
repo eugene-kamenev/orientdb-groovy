@@ -1,5 +1,29 @@
-group 'com.ek'
-version '0.1.0'
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+plugins {
+    id "com.jfrog.bintray" version "1.4"
+}
+
+group 'com.github.eugene-kamenev'
+version '0.1.2'
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'groovy'
+}
+
+def file = new File('bintray.gradle')
+if (file.exists()) {
+    apply from: 'bintray.gradle'
+}
 
 apply plugin: 'groovy'
 apply plugin: 'idea'
@@ -10,6 +34,7 @@ repositories {
     jcenter()
     mavenCentral()
 }
+
 def groovy = '2.4.5'
 def orientDb = '2.2.0-beta'
 
@@ -28,3 +53,23 @@ dependencies {
     }
     testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
 }
+
+task sourcesJar(type: Jar) {
+    from project.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task myJavaDoc(type: Javadoc) {
+    source = project.sourceSets.main.java.srcDirs
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+

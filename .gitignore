@@ -59,4 +59,4 @@ gradle-app.setting
 !gradle-wrapper.jar
 gradle.properties
 local.properties
-
+bintray.gradle

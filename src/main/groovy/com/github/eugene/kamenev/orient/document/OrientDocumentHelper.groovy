@@ -93,10 +93,25 @@ class OrientDocumentHelper {
         return clazz.newInstance(document)
     }
 
+    /**
+     * Get class size in OrientDB
+     * @since 0.1.2
+     *
+     * @param className
+     * @return
+     */
     static Long count(String className) {
         return new ODocument().databaseIfDefined.countClass(className)
     }
 
+    /**
+     * Iterate through entity collection
+     * @since 0.1.2
+     *
+     * @param clazz
+     * @param className
+     * @return
+     */
     static <T> Iterable<T> iterate(Class clazz, String className) {
         return new DocumentIterator<T>(new ODocument().databaseIfDefined.browseClass(className), clazz)
     }

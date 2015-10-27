@@ -164,10 +164,25 @@ class OrientGraphHelper {
         }
     }
 
+    /**
+     * Get class size in OrientDB
+     * @since 0.1.2
+     *
+     * @param className
+     * @return
+     */
     static Long count(String className) {
         return OrientGraph.activeGraph.rawGraph.countClass(className)
     }
 
+    /**
+     * Iterate through entity collection
+     * @since 0.1.2
+     *
+     * @param clazz
+     * @param className
+     * @return
+     */
     static <T> Iterable<T> iterate(Class clazz, String className) {
         return new GraphIterator<T>(OrientGraph.activeGraph.rawGraph.browseClass(className), clazz)
     }
