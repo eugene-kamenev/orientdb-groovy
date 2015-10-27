@@ -113,7 +113,7 @@ class Profile {
     static mapping = {
         birthday(field: 'birth_date')
         phones(field: 'user_phones')
-        city(type: OType.LINK, fetch: 'eager')
+        city(type: OType.LINK)
     }
 
     Integer getYears() {
@@ -148,8 +148,35 @@ class Country {
         cities(type: OType.LINKLIST)
     }
 }
-
 ```
+###Schema Initialization
+By default orientdb-groovy will not generate schema init methods. To generate initialize schema methods from entity classes you should set initSchema=true. You can define index type of a field, values can be:
+'dictionary', 'hashUnique', 'hashNotUnique', 'notUnique', 'fulltext', 'fulltextHash', 'unique', 'dictionaryHash', 'spatial'
+
+For example:
+```groovy
+@OrientDocument(initSchema = true, value = 'ProductCollection')
+@CompileStatic
+class Product {
+    String title
+    Date releaseDate
+    BigDecimal price
+    List<Category> categories
+
+    static mapping = {
+        title(index: 'unique')
+        releaseDate(index: 'notUnique', field: 'date_released')
+        categories(type: OType.LINKLIST, field: 'product_categories')
+    }
+}
+```
+Then orientdb-groovy will add special static methods that you should call only once to generate schema in OrientDB.
+```
+Product.initSchema(db)
+Product.initSchemaLinks(db)
+```
+The first method will create properties with indexes and types, and second creates links between classes if they defined.
+
 ### Document creation
 ```groovy
     def phones = ['+900000000', '+800000000', '+7000000']
@@ -164,6 +191,3 @@ class Country {
     def personList = Person.executeQuery('select from Person where firstName=?', 'Bart')
     def personList2 = User.executeQuery('select from User where firstName=:a and lastName like :b', [a: 'Bart', b: '%Simpson%'])
 ```
-
-###Schema Initialization
-####TODO explain
