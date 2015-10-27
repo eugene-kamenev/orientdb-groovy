@@ -10,14 +10,21 @@ repositories {
     jcenter()
     mavenCentral()
 }
-
-def groovy = '2.4.4'
-
+def groovy = '2.4.5'
+def orientDb = '2.2.0-beta'
 
 dependencies {
-    compile "org.codehaus.groovy:groovy-all:${groovy}"
-    compile 'com.orientechnologies:orientdb-core:2.1.0'
-    compile 'com.orientechnologies:orientdb-client:2.1.0'
-    compile 'com.orientechnologies:orientdb-graphdb:2.1.0'
+    compile("org.codehaus.groovy:groovy-all:${groovy}") {
+        transitive = true
+    }
+    compile("com.orientechnologies:orientdb-core:${orientDb}") {
+        transitive = true
+    }
+    compile("com.orientechnologies:orientdb-client:${orientDb}") {
+        transitive = true
+    }
+    compile("com.orientechnologies:orientdb-graphdb:${orientDb}") {
+        transitive = true
+    }
     testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
 }

@@ -163,4 +163,12 @@ class OrientGraphHelper {
             return (T) transformVertexCollectionToEntity(resultClass, (Iterable) result, OType.LINKLIST)
         }
     }
+
+    static Long count(String className) {
+        return OrientGraph.activeGraph.rawGraph.countClass(className)
+    }
+
+    static <T> Iterable<T> iterate(Class clazz, String className) {
+        return new GraphIterator<T>(OrientGraph.activeGraph.rawGraph.browseClass(className), clazz)
+    }
 }

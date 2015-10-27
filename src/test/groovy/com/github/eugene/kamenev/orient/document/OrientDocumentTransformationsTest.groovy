@@ -31,6 +31,10 @@ class OrientDocumentTransformationsTest extends Specification {
             db.commit()
         then: 'assert that firstName equals to assigned before'
             assert person.firstName == 'AnyName'
+        and: 'invoke count method on class'
+            assert Person.count() == 1
+        and: 'check iterate method call'
+            assert Person.iterate().collect().size() == 1
     }
 
     def 'test query execution method with different params'() {
@@ -48,6 +52,10 @@ class OrientDocumentTransformationsTest extends Specification {
             assert gomer.firstName == 'Gomer'
             assert lara.firstName == 'Lara'
             assert bart.firstName == 'Bart'
+        and: 'invoke count check again'
+            assert Person.count() == 4
+        and: 'check iterate method call'
+            assert Person.iterate().collect().size() == 4
     }
 
     def 'test OType.LINK OrientDB relationship'() {

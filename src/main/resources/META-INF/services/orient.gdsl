@@ -95,6 +95,15 @@ contributor(context()) {
                 }
             }
         }
+        if (classType?.hasAnnotation(orientEdge) || classType?.hasAnnotation(orientVertex)) {
+            method(name: 'iterate', type: "java.lang.Iterable<$classType.name>", isStatic: true, params: [:])
+        }
+        if (classType?.hasAnnotation(orientDocument) || classType?.hasAnnotation(orientEdge) || classType?.hasAnnotation(orientVertex)) {
+            method(name: 'count', type: 'Long', isStatic: true, params: [:])
+        }
+        if (classType?.hasAnnotation(orientDocument)) {
+            method(name: 'iterate', type: "java.lang.Iterable<$classType.name>", isStatic: true, params: [:])
+        }
     } catch (Exception e) {
     }
 }

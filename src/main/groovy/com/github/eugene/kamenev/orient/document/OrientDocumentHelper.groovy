@@ -1,11 +1,9 @@
 package com.github.eugene.kamenev.orient.document
-
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
-
 /**
  * OrientDB document helper methods
  *
@@ -93,6 +91,14 @@ class OrientDocumentHelper {
             return null
         }
         return clazz.newInstance(document)
+    }
+
+    static Long count(String className) {
+        return new ODocument().databaseIfDefined.countClass(className)
+    }
+
+    static <T> Iterable<T> iterate(Class clazz, String className) {
+        return new DocumentIterator<T>(new ODocument().databaseIfDefined.browseClass(className), clazz)
     }
 
 }

@@ -1,5 +1,4 @@
 package com.github.eugene.kamenev.orient.ast
-
 import com.github.eugene.kamenev.orient.ast.util.ASTUtil
 import com.github.eugene.kamenev.orient.ast.util.EntityStructure
 import com.github.eugene.kamenev.orient.document.OrientDocument
@@ -22,7 +21,6 @@ import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.Statement
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
 /**
  * Represents Orient Entity Structure
  *
@@ -41,6 +39,8 @@ class OrientStructure extends EntityStructure<OrientProperty> {
     static ClassNode DOCUMENT = ClassHelper.make(ODocument).plainNodeReference
     static ClassNode ORIENT_GRAPH = ClassHelper.make(OrientGraph).plainNodeReference
     static ClassNode ODATABASE_TX = ClassHelper.make(ODatabaseDocumentTx).plainNodeReference
+    static ClassNode ITERABLE = ClassHelper.make(Iterable).plainNodeReference
+    static ClassNode LONG = ClassHelper.make(Long).plainNodeReference
 
     static ClassNode ORIENT_GROOVY_DOCUMENT = ClassHelper.make(OrientDocument).plainNodeReference
     static ClassNode ORIENT_GROOVY_VERTEX = ClassHelper.make(Vertex).plainNodeReference
@@ -62,7 +62,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
 
     OrientStructure(ClassNode entityClassNode, AnnotationNode annotationNode, String injectedFieldName) {
         super(entityClassNode, annotationNode)
-        this.injectedObject = entityClassNode.fields.find {it.name == injectedFieldName}
+        this.injectedObject = entityClassNode.fields.find { FieldNode fieldNode -> fieldNode.name == injectedFieldName}
         this.className = ASTUtil.parseValue(annotationNode.members.value, entityClassNode.nameWithoutPackage)
         this.transients << injectedFieldName
     }
@@ -78,6 +78,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         createConstructors()
         createInitSchemaMethod()
         createInitSchemaLinksMethod()
+        createAdditional()
     }
 
     def createConstructors() {
@@ -103,7 +104,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         }
         selfTypeConstructor.addStatement(assignS(varX(injectedObject), varX(selfType[0])))
         // add initial values to empty constructor
-        entityProperties.each {k, orientProperty ->
+        entityProperties.each {k, OrientProperty orientProperty ->
             if (!orientProperty.edge && orientProperty.hasInitialValue()) {
                 emptyConstructor.addStatement(stmt(callThisX("set${orientProperty.nodeName.capitalize()}", orientProperty.fieldNode.initialValueExpression)))
             }
@@ -121,7 +122,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         boolean initSchema = ASTUtil.parseValue(annotation.members.initSchema, false)
         if (initSchema) {
             def mappingMap = new MapExpression()
-            entityProperties.each {k, orientProperty ->
+            entityProperties.each {k, OrientProperty orientProperty ->
                 if (!orientProperty.specialType) {
                     def mappingEntries = []
                     mappingEntries << new MapEntryExpression(constX('clazz'), classX(orientProperty.fieldNode.type))
@@ -159,11 +160,11 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         boolean initSchema = ASTUtil.parseValue(annotation.members.initSchema, false)
         if (initSchema) {
             def mappingMap = new MapExpression()
-            entityProperties.each {k, orientProperty ->
+            entityProperties.each {k, OrientProperty orientProperty ->
                 if (orientProperty.linkedType) {
                     def mappingEntries = []
-                    def annotationNode = orientProperty.collectionGenericType.annotations.find {
-                        it.classNode in [ORIENT_GROOVY_VERTEX, ORIENT_GROOVY_EDGE, ORIENT_GROOVY_DOCUMENT]
+                    def annotationNode = orientProperty.collectionGenericType.annotations.find { AnnotationNode annotationNode1 ->
+                        annotationNode1.classNode in [ORIENT_GROOVY_VERTEX, ORIENT_GROOVY_EDGE, ORIENT_GROOVY_DOCUMENT]
                     }
                     def clazzName = ASTUtil.parseValue(annotationNode?.members?.value, orientProperty.collectionGenericType.nameWithoutPackage)
                     mappingEntries << new MapEntryExpression(constX('linkedClass'), constX(clazzName))
@@ -197,7 +198,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
      * @return
      */
     def createGetters() {
-        entityProperties.each {k, orientProperty ->
+        entityProperties.each {k, OrientProperty orientProperty ->
             def methodBody = new BlockStatement()
             def resultVar = varX('resultVar', orientProperty.nodeType)
             Expression assignExpression = null
@@ -237,7 +238,7 @@ class OrientStructure extends EntityStructure<OrientProperty> {
      */
     def createSetters() {
         def methodReturnType = ClassHelper.VOID_TYPE
-        entityProperties.each {k, orientProperty ->
+        entityProperties.each { k, OrientProperty orientProperty ->
             if (!orientProperty.formula) {
                 def methodBody = new BlockStatement()
                 def setterParam = param(orientProperty.nodeType, orientProperty.nodeName)
@@ -301,6 +302,24 @@ class OrientStructure extends EntityStructure<OrientProperty> {
         }
         def methodName = "addTo${property.nodeName.capitalize()}"
         entity.addMethod(new MethodNode(methodName, ACC_PUBLIC, edgeClass.type.plainNodeReference, params(parameter), [] as ClassNode[], setterStatenent))
+    }
+
+    /**
+     * Creates count, list etc. methods
+     */
+    def createAdditional() {
+        Expression iterableExpression = null
+        Expression countExpression = null
+        if (vertex || edge) {
+            iterableExpression = callGraphHelper('iterate', args(classX(entity), constX(className)))
+            countExpression = callGraphHelper('count', args(constX(className)))
+        }
+        if (document) {
+            iterableExpression = callDocHelper('iterate', args(classX(entity), constX(className)))
+            countExpression = callDocHelper('count', args(constX(className)))
+        }
+        entity.addMethod(new MethodNode('count', ACC_PUBLIC | ACC_STATIC, LONG, [] as Parameter[], [] as ClassNode[], returnS(countExpression)))
+        entity.addMethod(new MethodNode('iterate', ACC_PUBLIC | ACC_STATIC, ITERABLE, [] as Parameter[], [] as ClassNode[], returnS(iterableExpression)))
     }
 
     /**
@@ -459,8 +478,8 @@ class OrientStructure extends EntityStructure<OrientProperty> {
     def clean() {
         ASTUtil.removeProperty(entity, 'mapping')
         ASTUtil.removeProperty(entity, 'transients')
-        allFields.each {
-            ASTUtil.removeProperty(entity, it.name)
+        allFields.each { FieldNode fieldNode ->
+            ASTUtil.removeProperty(entity, fieldNode.name)
         }
     }
 }
