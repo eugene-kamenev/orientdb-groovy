@@ -4,6 +4,10 @@
 This project contains Groovy AST Transformations trying to mimic grails-entity style.
 All useful information you can find in Spock tests dir. Document API and Graph API with gremlin are supported. Built with OrientDB 2.1.0 and Apache Groovy 2.4.4
 
+# Latest news:
+###03.01.2016
+Work on this project will be continued as native GORM plugin, see this: [link](https://github.com/eugene-kamenev/orientdb-groovy/issues/23)
+
 #Gradle config
 ```groovy
 repositories {
