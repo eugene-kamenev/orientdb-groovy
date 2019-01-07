@@ -30,7 +30,7 @@ class OrientGraphTransformationTest extends Specification {
 
     def 'test that transformations applied right'() {
         given: 'orient graph instance'
-        def orient = new OrientGraph(db)
+        def orient = new OrientGraph(db,false)
         orient.begin()
         and: 'few entities'
         def first = new Person(firstName: 'Gomer', lastName: 'Simpson')
