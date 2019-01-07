@@ -1,5 +1,7 @@
 package com.github.eugene.kamenev.orient
 import com.github.eugene.kamenev.orient.document.OrientDocumentHelper
+import com.orientechnologies.orient.core.db.ODatabaseDocumentInternal
+import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal
 import com.orientechnologies.orient.core.id.ORecordId
 import com.orientechnologies.orient.core.record.impl.ODocument
 import groovy.transform.CompileStatic
@@ -35,6 +37,7 @@ class OrientDSL {
      * @return
      */
     static <T> T get(Class<T> clazz, String rid) {
-        OrientDocumentHelper.transformDocument(clazz, (ODocument) new ODocument().getDatabaseIfDefined().getRecord(new ORecordId(rid)))
+        ODatabaseDocumentInternal db = ODatabaseRecordThreadLocal.instance().get()
+        OrientDocumentHelper.transformDocument(clazz, (ODocument) db.getRecord(new ORecordId(rid)))
     }
 }
