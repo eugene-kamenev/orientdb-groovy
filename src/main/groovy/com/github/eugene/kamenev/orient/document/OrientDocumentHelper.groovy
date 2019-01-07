@@ -1,4 +1,7 @@
 package com.github.eugene.kamenev.orient.document
+
+import com.orientechnologies.orient.core.db.ODatabaseDocumentInternal
+import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
@@ -25,7 +28,8 @@ class OrientDocumentHelper {
      */
     static <T> Object executeQuery(Class<T> clazz, String query, boolean singleResult, ... params) {
         def orientQuery = new OSQLSynchQuery<ODocument>(query)
-        List<ODocument> result = (List<ODocument>) new ODocument().getDatabaseIfDefined().command(orientQuery).execute(params)
+        ODatabaseDocumentInternal db = ODatabaseRecordThreadLocal.instance().get()
+        List<ODocument> result = (List<ODocument>) db.command(orientQuery).execute(params)
         if (singleResult) {
             return transformDocument(clazz, result[0])
         }
@@ -113,7 +117,8 @@ class OrientDocumentHelper {
      * @return
      */
     static <T> Iterable<T> iterate(Class clazz, String className) {
-        return new DocumentIterator<T>(new ODocument().databaseIfDefined.browseClass(className), clazz)
+        ODatabaseDocumentInternal db = ODatabaseRecordThreadLocal.instance().get()
+        return new DocumentIterator<T>(db.browseClass(className), clazz)
     }
 
 }
