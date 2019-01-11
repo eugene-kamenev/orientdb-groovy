@@ -1,21 +1,21 @@
-# What can Groovy make for OrientDB?
+# Groovy Entity Mapper
 [ ![Download](https://api.bintray.com/packages/eugene-kamenev/maven/orientdb-groovy/images/download.svg) ](https://bintray.com/eugene-kamenev/maven/orientdb-groovy/_latestVersion)
 
 This project contains Groovy AST Transformations trying to mimic grails-entity style.
-All useful information you can find in Spock tests dir. Document API and Graph API with gremlin are supported. Built with OrientDB 2.1.0 and Apache Groovy 2.4.4
+All useful information you can find in Spock tests dir. Document API and Graph API with gremlin are supported. Built with OrientDB 2.2.37 and Apache Groovy 2.4.5
 
 # Latest news:
-###03.01.2016
+### 03.01.2016
 Work on this project will be continued as native GORM plugin, see this: [link](https://github.com/eugene-kamenev/orientdb-groovy/issues/23)
 
-#Gradle config
+# Gradle config
 ```groovy
 repositories {
     jcenter()
 }
 
 dependencies {
-    compile "com.github.eugene-kamenev:orientdb-groovy:0.1.1" 
+    compile "com.github.eugene-kamenev:orientdb-groovy:0.1.3"
 }
 ```
 Example how to use it with Spring Boot
@@ -23,10 +23,10 @@ https://github.com/eugene-kamenev/orientdb-spring-boot-example
 
 This library will transform your entity with direct vertex/edge properties/methods access, no proxies here.
 
-###IDE Support
+### IDE Support
 This lib contains *.gdsl script for IntelliJ IDEA, it will work even in Community Edition, so you will feel very nice code completion. No red 'missing' methods!
 
-##Graph example
+## Graph example
 ```groovy
 @Vertex
 @CompileStatic
@@ -67,7 +67,7 @@ class Lives {
     Date since
 }
 ```
-##Graph creation
+## Graph creation
 When you define property as connected by edge, orientdb-groovy will generate special methods for adding edges.
 ```groovy
 def first = new Person(firstName: 'First Name')
@@ -82,13 +82,13 @@ amsterdam.addToCitizens(second)
 amsterdam.addToVisitedPersons(second)
 db.commit()
 ```
-##Gremlin graph queries
+## Gremlin graph queries
 Gremlin pipes are supported.
 ```groovy
 def count = newYork.vertex.pipe().out('Visited').count()
 def persons = newYork.vertex.pipe().out('Visited').has('firstName', 'First Name').toList(Person)
 ```
-##Document example
+## Document example
 ```groovy
 @OrientDocument
 @CompileStatic // yes it is fully supported
@@ -153,7 +153,7 @@ class Country {
     }
 }
 ```
-###Schema Initialization
+### Schema Initialization
 By default orientdb-groovy will not generate schema init methods. To generate initialize schema methods from entity classes you should set initSchema=true. You can define index type of a field, values can be:
 'dictionary', 'hashUnique', 'hashNotUnique', 'notUnique', 'fulltext', 'fulltextHash', 'unique', 'dictionaryHash', 'spatial'
 
@@ -190,7 +190,7 @@ The first method will create properties with indexes and types, and second creat
     person.save()
 ```
 
-###Document Quering
+### Document Quering
 ```groovy
     def personList = Person.executeQuery('select from Person where firstName=?', 'Bart')
     def personList2 = User.executeQuery('select from User where firstName=:a and lastName like :b', [a: 'Bart', b: '%Simpson%'])
